@@ -1,0 +1,7 @@
+plot
+plot1.svg
+*.o
+display_data.cpp
+
+main
+*.exe
