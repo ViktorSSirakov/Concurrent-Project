@@ -9,6 +9,9 @@
 
 double distance(const std::vector<double>& A, const std::vector<double>& B);
 
+//AS nothing is really saved in that datastruct and was made first with points, we keep as points, not single point clusters.
+//No point in changing
+
 struct CFNode{
     int n = 0;
     std::vector<double> ls;
