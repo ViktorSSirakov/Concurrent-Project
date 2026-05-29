@@ -31,6 +31,10 @@ int main(int argc, char* argv[]) {
     std::cout << "Columns: " << data.column_names.size() << "\n";
     std::cout << "Points: " << data.points.size() << "\n";
     std::cout << "Features per point: " << data.points[0].data.size() << "\n";
+    for(size_t i = 0; i < data.max_val.size(); i += 1){
+        std::cout << "My max values is " << data.max_val[i] << ", and the minimum is " 
+        << data.min_val[i] << " for the attribute " << data.column_names[i] << std::endl;
+    }
 
     return 0;
 }

@@ -5,6 +5,7 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
+#include <cmath>
 
 
 
@@ -49,6 +50,9 @@ void Data::Initialize(const std::string& filename){
     int rowNumber = 1;
 
     std::vector<Point> points;
+    //For getting coords
+    std::vector<double> maxes(n, -INFINITY);
+    std::vector<double> mins(n, INFINITY);
 
     while (std::getline(file, line)) {
         //If a typo line, continue
@@ -63,13 +67,19 @@ void Data::Initialize(const std::string& filename){
         int label_idx = n - 1;
 
         std::vector<double> numbers;
-        int label = 0;
+        int label;
 
-        for (int i = 0; i < values.size(); i++) {
+        for (int i = 0; i < n; i++) {
+            double val = std::stod(values[i]);
             if (i == label_idx) {
-                label = std::stoi(values[i]);
+                label = val;
             } else {
-                numbers.push_back(std::stod(values[i]));
+                numbers.push_back(val);
+            }
+            if(maxes[i] < val){
+                maxes[i] = val;
+            }else if(mins[i] > val){
+                mins[i] = val;
             }
         }
         Point p(numbers, label);
@@ -78,4 +88,7 @@ void Data::Initialize(const std::string& filename){
     }
     this->points = std::move(points);
     this->num_classes = n - 1;
+    this->max_val = std::move(maxes);
+    this->min_val = std::move(mins);
+
 }
