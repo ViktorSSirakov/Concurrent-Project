@@ -1,5 +1,5 @@
 #include "voronoi.h"
-#include "datapoints.h"
+#include "HAC.h"
 #include "CFTree.h"
 #include <cmath>
 
@@ -12,31 +12,39 @@ std::vector<const std::vector<double>*> Voronoi::AllSplittingPoints() const{
     for (const Cell& cell : this->cells) {
         cs.push_back(&cell.splitting_p);
     }
+
     return cs;
 }
 
 
-void Voronoi::SplitDatapoint(const Point& p){
+//Split a single cluster
+void Voronoi::SplitCluster(const Cluster& cluster){
+
+    std::vector<double> centroid = cluster.Centroid();
 
     double min_dist = INFINITY;
     //Find best distance
     for(size_t i = 0; i < this->cells.size(); i += 1){
-        double dist_cell = distance(p.data, this->cells[i].splitting_p);
+        double dist_cell = distance(centroid, this->cells[i].splitting_p);
+
         if(dist_cell < min_dist){
             min_dist = dist_cell;
         }
     }
+
     //Put in all cells where it should be
     for(size_t i = 0; i < this->cells.size(); i += 1){
-        if(distance(p.data, this->cells[i].splitting_p) <= min_dist + this->d){
-            this->cells[i].points.push_back(&p);
+        if(distance(centroid, this->cells[i].splitting_p) <= min_dist + this->d){
+            this->cells[i].clusters.push_back(&cluster);
         }
     }
 
 }
 
-void Voronoi::SplitData(const Data& data){
-    for(const Point& p: data.points){
-        this->SplitDatapoint(p);
+
+//Split all clusters
+void Voronoi::SplitClusters(const std::vector<Cluster>& clusters){
+    for(const Cluster& cluster : clusters){
+        this->SplitCluster(cluster);
     }
 }

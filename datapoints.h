@@ -9,10 +9,11 @@
 struct Point{
     std::vector<double> data;
     double label;
-    
-    Point(std::vector<double> data, double label){
+    int id;
+    Point(std::vector<double> data, double label, int id){
         this->data = data;
         this->label = label;
+        this->id = id;
     }
 
 };

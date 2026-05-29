@@ -53,7 +53,7 @@ void Data::Initialize(const std::string& filename){
     //For getting coords
     std::vector<double> maxes(n, -INFINITY);
     std::vector<double> mins(n, INFINITY);
-
+    int id = 0;
     while (std::getline(file, line)) {
         //If a typo line, continue
         if (line.empty()) {
@@ -63,11 +63,12 @@ void Data::Initialize(const std::string& filename){
         //Getting the value and turning them to doubles
         std::vector<std::string> values = split(line, delim);
 
-        //we have assumed that the last value is the label
-        int label_idx = n - 1;
+        //that was a mistake. Not used for now.
+        int label_idx = n + 1;
+        int label;
 
         std::vector<double> numbers;
-        int label;
+        
 
         for (int i = 0; i < n; i++) {
             double val = std::stod(values[i]);
@@ -82,9 +83,11 @@ void Data::Initialize(const std::string& filename){
                 mins[i] = val;
             }
         }
-        Point p(numbers, label);
+        Point p(numbers, label, id);
         points.push_back(p);
-        rowNumber++;
+        id += 1;
+        rowNumber += 1;
+        
     }
     this->points = std::move(points);
     this->num_classes = n - 1;

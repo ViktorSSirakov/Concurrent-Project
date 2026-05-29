@@ -1,6 +1,7 @@
 #include "datapoints.h"
 #include "CFTree.h"
 #include "voronoi.h"
+#include "HAC.h"
 
 #include <iostream>
 #include <string>
@@ -71,12 +72,35 @@ int main(int argc, char* argv[]) {
         std::cout << "\n";
     }
 
+    std::vector<Cluster> clusters = PointsToClusters(data);
+
     //Testing Voronoi 
-    double d = 0.3;
+    double d = 1;
     Voronoi v(d, &tree);
-    v.SplitData(data);
+    v.SplitClusters(clusters);
     for(size_t i = 0; i < v.cells.size(); i += 1){
-        std::cout << "Cell number " << (i + 1) << " has " << v.cells[i].points.size() << " inside." << std::endl;
+        std::cout << "Cell number " << (i + 1) << " has " << v.cells[i].clusters.size() << " inside." << std::endl;
     }
+    
+
+    //Testing HAC on the Voronoi cells
+    std::vector<Cluster> all_clusters;
+
+    for(size_t i = 0; i < v.cells.size(); i += 1){
+
+        std::vector<Cluster> local_clusters = HACClustersUntilD(v.cells[i].clusters, d);
+        std::cout << "Cell " << i
+                << " | points: " << v.cells[i].clusters.size()
+                << " | clusters after HAC: " << local_clusters.size()
+                << "\n";
+
+        for(Cluster& cluster : local_clusters){
+            all_clusters.push_back(cluster);
+        }
+    }
+
+    std::cout << "\nTotal local clusters collected: "
+            << all_clusters.size()
+            << "\n";
     return 0;
 }

@@ -2,20 +2,19 @@
 #define VORONOI
 
 #include "CFTree.h"
-#include "datapoints.h"
+#include "HAC.h"
 #include <vector>
-
-
 
 struct Voronoi{
 
     //These are all cells
     struct Cell{
         std::vector<double> splitting_p;
-        std::vector<const Point*> points;
+        std::vector<const Cluster*> clusters;
+
         Cell(std::vector<double> splitting_p){
             this->splitting_p = splitting_p;
-        } 
+        }
     };
 
     double d; //overlap distance
@@ -32,9 +31,8 @@ struct Voronoi{
     }
 
     std::vector<const std::vector<double>*> AllSplittingPoints() const;
-    void SplitDatapoint(const Point& p);
-    void SplitData(const Data& data);
-
+    void SplitCluster(const Cluster& cluster);
+    void SplitClusters(const std::vector<Cluster>& clusters);
 };
 
 #endif
