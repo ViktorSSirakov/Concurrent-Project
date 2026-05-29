@@ -4,8 +4,8 @@
 #include "datapoints.h"
 #include <vector>
 
-struct Cluster {
 
+struct Cluster {
     std::vector<const Point*> points;
     std::vector<int> point_ids;    
     

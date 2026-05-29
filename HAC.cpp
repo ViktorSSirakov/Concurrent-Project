@@ -1,6 +1,5 @@
 #include "HAC.h"
 #include <vector>
-#include "CFTree.h"
 #include <cmath>
 double distance(const std::vector<double>& A, const std::vector<double>& B);
 

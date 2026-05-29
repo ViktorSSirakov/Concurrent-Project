@@ -7,6 +7,18 @@
 #include <fstream>
 #include <cmath>
 
+//Distance between 2 vectors
+double distance(const std::vector<double>& A, const std::vector<double>& B){
+    if(A.size() != B.size()){
+        std::cerr << "Dimensions mismatch!" << std::endl;
+        return -1;
+    }
+    double dis = 0.0;
+    for(size_t i = 0; i < A.size(); i += 1){
+        dis += (B[i] - A[i]) * (B[i] - A[i]);
+    }
+    return sqrt(dis);
+}
 
 
 // Get all fields split from a single datapoint

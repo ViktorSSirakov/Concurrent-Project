@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 
+double distance(const std::vector<double>& A, const std::vector<double>& B);
+
 
 //All unique points 
 struct Point{
