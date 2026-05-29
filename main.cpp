@@ -1,5 +1,6 @@
 #include "datapoints.h"
 #include "CFTree.h"
+#include "voronoi.h"
 
 #include <iostream>
 #include <string>
@@ -70,5 +71,12 @@ int main(int argc, char* argv[]) {
         std::cout << "\n";
     }
 
+    //Testing Voronoi 
+    double d = 0.3;
+    Voronoi v(d, &tree);
+    v.SplitData(data);
+    for(size_t i = 0; i < v.cells.size(); i += 1){
+        std::cout << "Cell number " << (i + 1) << " has " << v.cells[i].points.size() << " inside." << std::endl;
+    }
     return 0;
 }
