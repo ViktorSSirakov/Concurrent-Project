@@ -6,29 +6,32 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <thread>
-#include <chrono>
+
+void PrintHistory(const Dendogram& dendogram, const std::string& name) {
+    std::cout << "\n" << name << " history:" << std::endl;
+
+    for(size_t i = 0; i < dendogram.history.size(); i += 1) {
+        const Dendogram::Step& step = dendogram.history[i];
+
+        std::cout << "  Step " << i
+                << ": " << step.left_id
+                << " + " << step.right_id
+                << " -> " << step.new_id
+                << " at distance " << step.distance
+                << std::endl;
+    }
+}
+
+// main.cpp
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <csv-file-path> [num_threads]" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <csv-file-path>" << std::endl;
         std::cerr << "Example path: Clustering-Datasets/01.\\ UCI/banknote.csv" << std::endl;
         return 1;
     }
 
     std::string filename = argv[1];
-
-    double maxR = 1.5;
-
-
-    size_t num_threads;
-
-    if (argc >= 3) {
-        num_threads = std::stoul(argv[2]);
-        if (num_threads == 0) {
-            num_threads = 1;
-        }
-    }
 
     Data data(filename);
 
@@ -41,23 +44,19 @@ int main(int argc, char* argv[]) {
 
     std::vector<Cluster> clusters = PointsToClusters(data);
 
-    std::cout << "Maximum radius for the CFTree: " << maxR << std::endl;
-    std::cout << "Threads for Voronoi split: " << num_threads << std::endl;
+    double maxR = 1;
+    if (argc == 3) {
+        maxR = std::stod(argv[2]);
+        std::cout << "Maximum radius for the CFTree is provided and it is " << maxR << std::endl;
+    }
 
     CFTree tree(maxR);
     tree.IncludeClusters(clusters);
     tree.PrintSummary();
 
-    double d = maxR;
-
+    double d = 1;
     Voronoi v(d, &tree);
-    auto voronoi_start = std::chrono::high_resolution_clock::now();
-
-    v.SplitClustersThreads(clusters, num_threads);
-
-    auto voronoi_end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> voronoi_time = voronoi_end - voronoi_start;
-
+    v.SplitClusters(clusters);
     v.PrintSummary();
 
     std::vector<Cluster> all_clusters;
@@ -80,7 +79,9 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    std::cout << "Total local clusters collected: " << all_clusters.size() << std::endl;
+    std::cout << "\nTotal local clusters collected: "
+              << all_clusters.size()
+              << std::endl;
 
     if (all_clusters.empty()) {
         std::cerr << "No clusters collected after Voronoi phase." << std::endl;
@@ -99,11 +100,9 @@ int main(int argc, char* argv[]) {
         global_dendogram.MergeClosest();
     }
 
-    std::cout << "Global dendogram after Voronoi:" << std::endl;
+    std::cout << "\nGlobal dendogram after Voronoi:" << std::endl;
     global_dendogram.PrintSummary("Global");
     global_dendogram.PrintHistory("Global");
-
-    std::cout << "It took " << voronoi_time.count() << "secs to finish with the num of threads!" << std::endl;
 
     return 0;
 }

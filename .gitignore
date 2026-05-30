@@ -2,6 +2,6 @@ plot
 plot1.svg
 *.o
 display_data.cpp
-
+*:Zone.Id*
 main
 *.exe

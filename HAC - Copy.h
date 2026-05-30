@@ -8,7 +8,7 @@
 
 struct Cluster {
     std::vector<const Point*> points;
-    std::vector<int> point_ids;
+    std::vector<int> point_ids;  
     
     Cluster(const Point& p){
         this->points.push_back(&p);
@@ -79,7 +79,6 @@ struct Dendogram {
         this->next_id = n;
     }
 
-    //SImple case - just always recompute, TO be updated to stored matrx and priority queue if time allows it
     std::pair<size_t, size_t> FindClosest() const;
     bool MergeClosest();
     Cluster BuildFromNode(size_t node_id) const;
