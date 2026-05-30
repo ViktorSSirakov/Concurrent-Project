@@ -2,6 +2,7 @@
 #include <vector>
 #include <cmath>
 #include <utility>
+#include <iostream>
 
 
 double distance(const std::vector<double>& A, const std::vector<double>& B);
@@ -143,4 +144,26 @@ void VoronoiDendogram::RunUntilD() {
         }
         MergeClosest();
     }
+}
+
+// HAC.cpp
+
+void Dendogram::PrintHistory(const std::string& name) const {
+    std::cout << "\n" << name << " history:" << std::endl;
+
+    for (size_t i = 0; i < this->history.size(); i += 1) {
+        const Dendogram::Step& step = this->history[i];
+
+        std::cout << "  Step " << i
+                  << ": " << step.left_id
+                  << " + " << step.right_id
+                  << " -> " << step.new_id
+                  << " at distance " << step.distance
+                  << std::endl;
+    }
+}
+
+void Dendogram::PrintSummary(const std::string& name) const {
+    std::cout << name << " merges: " << this->history.size() << std::endl;
+    std::cout << name << " active clusters: " << this->active_ids.size() << std::endl;
 }

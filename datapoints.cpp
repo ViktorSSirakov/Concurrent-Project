@@ -91,7 +91,8 @@ void Data::Initialize(const std::string& filename){
             }
             if(maxes[i] < val){
                 maxes[i] = val;
-            }else if(mins[i] > val){
+            } 
+            if(mins[i] > val){
                 mins[i] = val;
             }
         }
@@ -106,4 +107,21 @@ void Data::Initialize(const std::string& filename){
     this->max_val = std::move(maxes);
     this->min_val = std::move(mins);
 
+}
+
+
+//Test prints
+// datapoints.cpp
+
+void Data::PrintSummary() const {
+    std::cout << "Loaded file: " << this->filename << std::endl;
+    std::cout << "Columns: " << this->column_names.size() << std::endl;
+    std::cout << "Points: " << this->points.size() << std::endl;
+
+    for (size_t i = 0; i < max_val.size(); i += 1) {
+        std::cout << "Max value is " << max_val[i]
+                  << ", and the minimum is " << min_val[i]
+                  << " for the attribute " << column_names[i]
+                  << std::endl;
+    }
 }

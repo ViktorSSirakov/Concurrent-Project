@@ -33,6 +33,8 @@ struct Voronoi{
     std::vector<const std::vector<double>*> AllSplittingPoints() const;
     void SplitCluster(const Cluster& cluster);
     void SplitClusters(const std::vector<Cluster>& clusters);
+    void PrintSummary() const;
+
 };
 
 #endif

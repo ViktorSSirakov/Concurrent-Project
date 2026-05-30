@@ -48,3 +48,11 @@ void Voronoi::SplitClusters(const std::vector<Cluster>& clusters){
         this->SplitCluster(cluster);
     }
 }
+
+void Voronoi::PrintSummary() const {
+    for (size_t i = 0; i < this->cells.size(); i += 1) {
+        std::cout << "Cell number " << (i + 1)
+                  << " has " << cells[i].clusters.size()
+                  << " inside." << std::endl;
+    }
+}

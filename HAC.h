@@ -82,6 +82,9 @@ struct Dendogram {
     std::pair<size_t, size_t> FindClosest() const;
     bool MergeClosest();
     Cluster BuildFromNode(size_t node_id) const;
+
+    void PrintHistory(const std::string& name) const;
+    void PrintSummary(const std::string& name) const;
 };
 
 struct VoronoiDendogram : Dendogram {

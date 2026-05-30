@@ -42,6 +42,7 @@ struct CFTree{
     int ClosestEntry(const Cluster& cluster) const;
     void IncludeCluster(const Cluster& cluster);
     void IncludeClusters(const std::vector<Cluster>& clusters);
+    void PrintSummary() const;
 };
 
 

@@ -131,3 +131,9 @@ void CFTree::IncludeClusters(const std::vector<Cluster>& clusters){
         this->IncludeCluster(cluster);
     }
 }
+
+
+void CFTree::PrintSummary() const {
+    std::cout << "maxR: " << this->maxR << std::endl;
+    std::cout << "CF nodes / centroids: " << this->Nodes.size() << std::endl;
+}
