@@ -49,6 +49,7 @@ struct Dendogram {
     };
 
     std::vector<const Cluster*> initial_clusters;
+    //The id of the Node is its location in the vector nodes
     std::vector<Node> nodes;
     std::vector<size_t> active_ids;
     std::vector<Step> history;
