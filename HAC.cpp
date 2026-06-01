@@ -1,53 +1,19 @@
 #include "HAC.h"
+#include "CFTree.h"
+#include "datapoints.h"
+#include "voronoi.h"
+
 #include <vector>
 #include <cmath>
 #include <utility>
 #include <iostream>
+#include <thread>
+#include <atomic>
 
 
 double distance(const std::vector<double>& A, const std::vector<double>& B);
-
+struct Cluster;
 // Distance between 2 clusters
-double ClusterDistance(const Cluster& a, const Cluster& b){
-    return distance(a.Centroid(), b.Centroid());
-}
-
-
-//Centroid of a cluster
-std::vector<double> Cluster::Centroid() const{
-    size_t dim = this->points[0]->data.size();
-    std::vector<double> c(dim, 0);
-
-    for(const Point* p: this->points){
-        for(size_t i = 0; i < dim; i += 1){
-            c[i] += p->data[i];
-        }
-    }
-
-    for(size_t i = 0; i < dim; i += 1){
-        c[i] /= this->points.size();
-    }
-
-    return c;
-}
-
-Cluster Merge(const Cluster& first, const Cluster& second){
-    Cluster cl = first;
-    cl.points.insert(cl.points.end(), second.points.begin(), second.points.end());
-    cl.point_ids.insert(cl.point_ids.end(), second.point_ids.begin(), second.point_ids.end());
-    return cl;
-}
-
-//Turning all Points into clustors
-std::vector<Cluster> PointsToClusters(const Data& data){
-    std::vector<Cluster> clusters;
-
-    for(const Point& p : data.points){
-        clusters.push_back(Cluster(p));
-    }
-
-    return clusters;
-}
 
 
 
@@ -135,18 +101,7 @@ Cluster Dendogram::BuildFromNode(size_t node_id) const{
     return res;
 }
 
-void VoronoiDendogram::RunUntilD() {
-    while(this->active_ids.size() > 1) {
-        std::pair<size_t, size_t> closest = this->FindClosest();
-        double dist = distance(nodes[closest.first].centroid, nodes[closest.second].centroid);
-        if(dist > d) {
-            return;
-        }
-        MergeClosest();
-    }
-}
 
-// HAC.cpp
 
 void Dendogram::PrintHistory(const std::string& name) const {
     std::cout << "\n" << name << " history:" << std::endl;
@@ -166,4 +121,100 @@ void Dendogram::PrintHistory(const std::string& name) const {
 void Dendogram::PrintSummary(const std::string& name) const {
     std::cout << name << " merges: " << this->history.size() << std::endl;
     std::cout << name << " active clusters: " << this->active_ids.size() << std::endl;
+}
+
+
+static void RunCellsUntilDHelp(VoronoiDendogram* self, std::atomic<size_t>* next, double d) {
+
+    const size_t total = self->cell_dendos.size();
+    for (;;) {
+        size_t i = next->fetch_add(1);
+        if (i >= total) return;
+
+        Dendogram& dendo = self->cell_dendos[i];
+        while (dendo.active_ids.size() > 1) {
+            std::pair<size_t, size_t> closest = dendo.FindClosest();
+            double dist = distance(dendo.nodes[closest.first].centroid, dendo.nodes[closest.second].centroid);
+            if (dist > d){ 
+                break;
+            }
+            dendo.MergeClosest();
+        }
+    }
+}
+
+void VoronoiDendogram::RunUntilD(const size_t max_threads) {
+
+    const size_t n = this->voro.c;
+    if (n == 0) return;
+
+    const size_t num_threads = std::max<size_t>(1, std::min(max_threads, n));
+
+    const double d = this->voro.d;
+
+    std::atomic<size_t> next(0);
+    std::vector<std::thread> threads;
+
+    for (size_t t = 0; t < num_threads; t += 1) {
+        threads.emplace_back(RunCellsUntilDHelp, this, &next, d);
+    }
+
+    for (auto& th : threads){ 
+        th.join();
+    }
+}
+
+//Building the remaining clusters. I arrange allocate space for the cluster and then a 
+//thread is tasked with construction. When done, it make a different one. There is an atomic variable 
+//to check which cluster were working at
+
+void CollectClustersWorker(VoronoiDendogram* self, std::atomic<size_t>* next, 
+    const std::vector<size_t>* offsets, std::vector<Cluster>* out) {
+
+    const size_t n_cells = self->cell_dendos.size();
+    for (;;) {
+        size_t i = next->fetch_add(1, std::memory_order_relaxed);
+        if (i >= n_cells) return;
+
+        const Dendogram& dendo = self->cell_dendos[i];
+        const size_t base = (*offsets)[i];
+        for (size_t j = 0; j < dendo.active_ids.size(); j += 1) {
+            (*out)[base + j] = dendo.BuildFromNode(dendo.active_ids[j]);
+        }
+    }
+}
+
+std::vector<Cluster> VoronoiDendogram::GetAllClusters(const size_t max_threads) {
+    const size_t n_cells = this->cell_dendos.size();
+    if (n_cells == 0){ 
+        std::cerr << "There was problem with loading" << std::endl;
+        return {};
+    }
+
+    std::vector<size_t> offsets(n_cells);
+    size_t total = 0;
+
+    for (size_t i = 0; i < n_cells; i += 1) {
+        offsets[i] = total;
+        total += this->cell_dendos[i].active_ids.size();
+    }
+
+    std::vector<Cluster> out(total);
+    if (total == 0) return out;
+
+    const size_t num_threads = std::max<size_t>(1, std::min(max_threads, n_cells));
+    std::atomic<size_t> next(0);
+
+    std::vector<std::thread> threads;
+    threads.reserve(num_threads);
+
+    for (size_t t = 0; t < num_threads; t += 1) {
+        threads.emplace_back(CollectClustersWorker, this, &next, &offsets, &out);
+    }
+
+    for (auto& th : threads){ 
+        th.join();
+    }
+
+    return out;
 }

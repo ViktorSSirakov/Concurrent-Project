@@ -1,11 +1,11 @@
 #include "voronoi.h"
-#include "HAC.h"
 #include "CFTree.h"
+#include "datapoints.h"
 
 #include <cmath>
 #include <thread>
 
-
+struct Cluster;
 double distance(const std::vector<double>& A, const std::vector<double>& B);
 
 //All spliting points we have. Not useful

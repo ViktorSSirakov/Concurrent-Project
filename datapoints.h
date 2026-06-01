@@ -33,10 +33,40 @@ struct Data{
     Data(const std::string& filename):
     filename(filename){
         this->Initialize(filename);
+        this->Standartize(1);
     }
 
+    Data(const std::string& filename, const size_t max_threads):
+    filename(filename){
+        this->Initialize(filename);
+        this->Standartize(max_threads);
+    }
+
+
     void Initialize(const std::string& filename);
+    void Standartize(const size_t num_threads);
     void PrintSummary() const;
 };
+
+struct Cluster {
+    std::vector<const Point*> points;
+    std::vector<int> point_ids;
+    
+    Cluster() = default;
+    Cluster(const Point& p){
+        this->points.push_back(&p);
+        this->point_ids.push_back(p.id);
+    }
+    std::vector<double> Centroid() const;
+
+};
+Cluster Merge(const Cluster& first, const Cluster& second);
+
+//Turning the points into clusters
+std::vector<Cluster> PointsToClusters(const Data& data);
+
+
+
+
 
 #endif

@@ -2,27 +2,15 @@
 #define HEC
 
 #include "datapoints.h"
+#include "CFTree.h"
+#include "voronoi.h"
+
 #include <vector>
 #include <utility>
 
-
-struct Cluster {
-    std::vector<const Point*> points;
-    std::vector<int> point_ids;
-    
-    Cluster(const Point& p){
-        this->points.push_back(&p);
-        this->point_ids.push_back(p.id);
-    }
-
-    std::vector<double> Centroid() const;
-
-};
-Cluster Merge(const Cluster& first, const Cluster& second);
-
-//Turning the points into clusters
-std::vector<Cluster> PointsToClusters(const Data& data);
-
+struct CFTree;
+struct Cluster;
+struct Voronoi;
 //Structure for defining the dendogram
 //We have history - what is happening when
 //We keep the initial clusters given, but we can construct every step
@@ -88,14 +76,22 @@ struct Dendogram {
     void PrintSummary(const std::string& name) const;
 };
 
-struct VoronoiDendogram : Dendogram {
-    double d;
+struct VoronoiDendogram{ 
+    
+    const Voronoi& voro;
+    std::vector<Dendogram> cell_dendos;
 
-    VoronoiDendogram(const std::vector<const Cluster*>& clusters, double d):
-          Dendogram(clusters),
-          d(d) {}
+    VoronoiDendogram(const Voronoi& voro):
+    voro(voro){
+        for(size_t i = 0; i < voro.cells.size(); i += 1){
+            Dendogram d(voro.cells[i].clusters);
+            this->cell_dendos.push_back(d);
+        }
+    }
 
-    void RunUntilD();
+
+    void RunUntilD(const size_t num_threads);
+    std::vector<Cluster> GetAllClusters(const size_t max_threads);
 };
 
 #endif

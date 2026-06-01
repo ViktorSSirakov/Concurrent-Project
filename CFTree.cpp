@@ -1,6 +1,5 @@
 #include "CFTree.h"
 #include "datapoints.h"
-#include "HAC.h"
 #include <vector>
 #include <iostream>
 #include <cmath>

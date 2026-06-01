@@ -1,11 +1,13 @@
 #ifndef VORONOI
 #define VORONOI
 
+#include "datapoints.h"
 #include "CFTree.h"
-#include "HAC.h"
 #include <utility>
 #include <vector>
 #include <mutex>
+
+struct CFTree;
 
 struct Voronoi{
 

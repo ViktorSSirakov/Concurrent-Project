@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <thread>
 
 //Distance between 2 vectors
 double distance(const std::vector<double>& A, const std::vector<double>& B){
@@ -125,3 +126,90 @@ void Data::PrintSummary() const {
                   << std::endl;
     }
 }
+
+//Standartizing values. For now, putting the values between 0 and 1. Done with multiple threads.
+void StandartizationHelp(Data& data, const std::vector<double>& intervals, size_t begin, size_t end, size_t dim){
+    for(size_t j = begin; j < end; j += 1){
+        auto& p = data.points[j];
+        for(size_t i = 0; i < dim; i += 1){
+            p.data[i] /= intervals[i];
+        }
+    }
+}
+
+void Data::Standartize(const size_t max_threads){
+    if(this->points.size() <= 0){
+        std::cerr << "Empty dataset. No initialilzation was made!" << std::endl;
+        return;
+    }
+    const size_t dim = this->points[0].data.size();
+    std::vector<double> intervals(dim, 0);
+
+    for(size_t i = 0; i < dim; i += 1){
+        intervals[i] = this->max_val[i] - this->min_val[i];
+        if(intervals[i] <= 0){
+            std::cerr << "Something wierd is happening with the data!" << std::endl;
+            return; 
+        }
+    }
+
+    const size_t n = this->points.size();
+    const size_t n_threads = std::max<size_t>(1, std::min(max_threads, n));
+
+    std::vector<std::thread> threads;
+
+    const size_t chunk = n / n_threads;
+    const size_t rem   = n % n_threads;
+    size_t start = 0;
+
+    for(size_t t = 0; t < n_threads; t += 1){
+        const size_t count = chunk + (t < rem ? 1 : 0);
+        threads.emplace_back(StandartizationHelp, std::ref(*this), std::cref(intervals), start, start + count, dim);
+        start += count;
+    }
+    for(auto& th : threads) th.join();
+}
+
+
+//Cluster stuff
+double ClusterDistance(const Cluster& a, const Cluster& b){
+    return distance(a.Centroid(), b.Centroid());
+}
+
+
+//Centroid of a cluster
+std::vector<double> Cluster::Centroid() const{
+    size_t dim = this->points[0]->data.size();
+    std::vector<double> c(dim, 0);
+
+    for(const Point* p: this->points){
+        for(size_t i = 0; i < dim; i += 1){
+            c[i] += p->data[i];
+        }
+    }
+
+    for(size_t i = 0; i < dim; i += 1){
+        c[i] /= this->points.size();
+    }
+
+    return c;
+}
+
+Cluster Merge(const Cluster& first, const Cluster& second){
+    Cluster cl = first;
+    cl.points.insert(cl.points.end(), second.points.begin(), second.points.end());
+    cl.point_ids.insert(cl.point_ids.end(), second.point_ids.begin(), second.point_ids.end());
+    return cl;
+}
+
+//Turning all Points into clustors
+std::vector<Cluster> PointsToClusters(const Data& data){
+    std::vector<Cluster> clusters;
+
+    for(const Point& p : data.points){
+        clusters.push_back(Cluster(p));
+    }
+
+    return clusters;
+}
+
