@@ -115,6 +115,7 @@ void Data::Initialize(const std::string& filename){
 // datapoints.cpp
 
 void Data::PrintSummary() const {
+    std::cout << "\n========================== Data Summary =========================" << std::endl;
     std::cout << "Loaded file: " << this->filename << std::endl;
     std::cout << "Columns: " << this->column_names.size() << std::endl;
     std::cout << "Points: " << this->points.size() << std::endl;

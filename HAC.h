@@ -7,33 +7,36 @@
 
 #include <vector>
 #include <utility>
+#include <queue>
 
+double distance(const std::vector<double>& A, const std::vector<double>& B);
 struct CFTree;
 struct Cluster;
 struct Voronoi;
+
+
 //Structure for defining the dendogram
 //We have history - what is happening when
-//We keep the initial clusters given, but we can construct every step
+//We keep the initial clusters given, but we can construct every step. This will be updated to be history dependent as 
+//keeping all pointers for each active cluster is wasteful
+
 struct Dendogram {
-    struct Node{
+    struct ActiveClusters{
         std::vector<size_t> initial_ids;
         std::vector<double> centroid;
         size_t size;
+        const size_t id;
+        bool active;
 
-        Node(const std::vector<size_t>& initial_ids, const std::vector<double>& centroid, size_t size){
-            this->initial_ids = initial_ids;
-            this->centroid = centroid;
-            this->size = size;
-        }
+        ActiveClusters(const std::vector<size_t>& initial_ids, const std::vector<double>& centroid, size_t size, size_t id):
+        id(id), initial_ids(initial_ids),
+        centroid(centroid), size(size), active(true){}
+
         //For initial once
-        Node(size_t initial, const std::vector<double>& centroid, size_t size){
-            this->initial_ids.push_back(initial);
-            this->centroid = centroid;
-            this->size = size;
-        }
-
+        ActiveClusters(size_t initial, const std::vector<double>& centroid, size_t size, size_t id): 
+        centroid(centroid), size(size), id(id), initial_ids({initial}), active(true){}        
     };
-
+    
     struct Step {
         size_t left_id;
         size_t right_id;
@@ -48,45 +51,94 @@ struct Dendogram {
         }
     };
 
-    std::vector<const Cluster*> initial_clusters;
-    //The id of the Node is its location in the vector nodes
-    std::vector<Node> nodes;
-    std::vector<size_t> active_ids;
+    const std::vector<const Cluster*> initial_clusters;
     std::vector<Step> history;
     size_t next_id;
 
-    Dendogram(const std::vector<const Cluster*>& initial_clusters) {
-        size_t n = initial_clusters.size();
 
-        for(size_t i = 0; i < n; i += 1) {
-            this->initial_clusters.push_back(initial_clusters[i]);
-            Node node(i, initial_clusters[i]->Centroid(), initial_clusters[i]->points.size());
-            this->nodes.push_back(node);
-            this->active_ids.push_back(i);
-        }
+    Dendogram(const std::vector<const Cluster*>& initial_clusters):
+    initial_clusters(initial_clusters), next_id(initial_clusters.size()){}
+    
 
-        this->next_id = n;
-    }
-
-    //SImple case - just always recompute, TO be updated to stored matrx and priority queue if time allows it
-    std::pair<size_t, size_t> FindClosest() const;
-    bool MergeClosest();
-    Cluster BuildFromNode(size_t node_id) const;
-
+    Cluster BuildFromNode(const ActiveClusters& act_cl) const;
     void PrintHistory(const std::string& name) const;
     void PrintSummary(const std::string& name) const;
+
+    //Placceholder. Calling them on a this structure is meaningless. 
+    //Technically simple algos can be implemented to be finding the distance every time, but its much sloweer(at least 20 times)
+
+    virtual std::pair<size_t, size_t> FindClosest(const size_t max_threads){ return {0, 0};}
+
+    virtual bool MergeClosest(const size_t max_threads){ return false;}
+
+    //Possible closest neighbor algos
+    struct PQ;
+
 };
+
+
+
+struct Dendogram::PQ : Dendogram {
+
+    struct ActiveClustersPQ : ActiveClusters {
+
+        struct PQEntry {
+            double dist;
+            size_t other;
+            bool operator>(const PQEntry& o) const { 
+                return dist > o.dist; 
+            }
+        };
+
+        using MinPQ = std::priority_queue<PQEntry, std::vector<PQEntry>, std::greater<PQEntry>>;
+
+        MinPQ pq;
+        using ActiveClusters::ActiveClusters;
+    };
+
+    std::vector<ActiveClustersPQ> actives;
+
+    PQ(const std::vector<const Cluster*>& initial_clusters):
+    Dendogram(initial_clusters){
+
+        const size_t n = initial_clusters.size();
+        this->actives.reserve(n);
+
+        for (size_t i = 0; i < n; i += 1) {
+            this->actives.emplace_back(i, initial_clusters[i]->Centroid(), initial_clusters[i]->points.size(), i);
+        }
+
+        //O(n**2) definition of distances. Distance is O(att)
+        for (size_t i = 0; i < n; i += 1) {
+            for (size_t j = 0; j < n; j += 1) {
+                if (i == j) {
+                    continue;
+                }
+
+                double dist = distance(this->actives[i].centroid, this->actives[j].centroid);
+                this->actives[i].pq.push({dist, j});
+            }
+        }
+    }
+
+    std::pair<size_t, size_t> FindClosest(const size_t max_threads);
+    bool MergeClosest(const size_t max_threads);
+
+};
+
+
 
 struct VoronoiDendogram{ 
     
     const Voronoi& voro;
-    std::vector<Dendogram> cell_dendos;
+    std::vector<Dendogram::PQ> cell_dendos;
 
-    VoronoiDendogram(const Voronoi& voro):
+    VoronoiDendogram(const Voronoi& voro): 
     voro(voro){
-        for(size_t i = 0; i < voro.cells.size(); i += 1){
-            Dendogram d(voro.cells[i].clusters);
-            this->cell_dendos.push_back(d);
+        this->cell_dendos.reserve(voro.cells.size());
+
+        for (size_t i = 0; i < voro.cells.size(); i += 1) {
+            this->cell_dendos.emplace_back(voro.cells[i].clusters);
         }
     }
 

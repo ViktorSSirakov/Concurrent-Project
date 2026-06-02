@@ -60,8 +60,6 @@ struct Voronoi{
     //Parallel On The spliting of all Clusters
     void CommitAllLogs();
 
-    //Running HAC on a Voronoi cell
-
 
 
 };

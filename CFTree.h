@@ -16,8 +16,10 @@ struct CFNode{
     int n = 0;
     std::vector<double> ls;
     double ss = 0.0;
+    bool active;
 
-    CFNode(const size_t dim){
+    CFNode(const size_t dim):
+    active(true){
         std::vector<double> ls(dim, 0.0);
         this->ls = std::move(ls);
     }
@@ -30,6 +32,7 @@ struct CFNode{
 
 
 struct CFTree{
+    double maxN = 100;
     double maxR;
     std::vector<CFNode> Nodes;
 

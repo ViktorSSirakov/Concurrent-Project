@@ -79,21 +79,18 @@ std::vector<std::vector<double>> CFTree::GetAllCentroid(){
 
 //FInd closest Node.
 int CFTree::ClosestEntry(const Cluster& cluster) const{
-    if(this->Nodes.size() == 0){
-        return -1;
-    }
-
     std::vector<double> centroid = cluster.Centroid();
 
     double min_dist = INFINITY;
-    size_t idx = 0;
+    int idx = -1;
 
     for(size_t i = 0; i < this->Nodes.size(); i += 1){
-        double dist_to_cluster = distance(centroid, this->Nodes[i].Centroid());
-
-        if(dist_to_cluster < min_dist){
-            min_dist = dist_to_cluster;
-            idx = i;
+        if(this->Nodes[i].active){
+            double dist_to_cluster = distance(centroid, this->Nodes[i].Centroid());
+            if(dist_to_cluster < min_dist){
+                min_dist = dist_to_cluster;
+                idx = i;
+            }
         }
     }
 
@@ -122,7 +119,13 @@ void CFTree::IncludeCluster(const Cluster& cluster){
         cf.AddCluster(cluster);
         this->Nodes.push_back(cf);
     }
+
+    if(this->Nodes[i].n >= this->maxN){
+        this->Nodes[i].active = false;
+    }
 }
+
+
 
 //Include the whole data
 void CFTree::IncludeClusters(const std::vector<Cluster>& clusters){
@@ -133,6 +136,11 @@ void CFTree::IncludeClusters(const std::vector<Cluster>& clusters){
 
 
 void CFTree::PrintSummary() const {
+    std::cout << "\n============================CFTree================================" << std::endl;
     std::cout << "maxR: " << this->maxR << std::endl;
     std::cout << "CF nodes / centroids: " << this->Nodes.size() << std::endl;
+    for(const auto& node: this->Nodes){
+        std::cout << "This one has " << node.n << "points!" << std::endl; 
+    }
+    std::cout << "\n\n\n" << std::endl;
 }
