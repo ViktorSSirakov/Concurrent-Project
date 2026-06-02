@@ -288,3 +288,24 @@ std::vector<Cluster> VoronoiDendogram::GetAllClusters(const size_t max_threads) 
 
     return out;
 }
+
+
+void VoronoiDendogram::PrintVoronoiSummary(){
+    std::cout << "\n\n\n============================ Voronoi Dendogram Info ===========================" << std::endl;
+    for (size_t i = 0; i < this->voro.cells.size(); i += 1) {
+        size_t active_after = 0;
+        for (const auto& a : this->cell_dendos[i].actives) {
+            if (a.active) {
+                active_after += 1;
+            }
+        }
+
+        std::cout << "Cell " << i
+                  << " | clusters before HAC: " << this->voro.cells[i].clusters.size()
+                  << " | clusters after HAC: " << active_after
+                  << " | merges: " << this->cell_dendos[i].history.size()
+                  << std::endl;
+
+    }
+    std::cout << std::endl; 
+}

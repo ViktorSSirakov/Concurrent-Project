@@ -145,6 +145,9 @@ struct VoronoiDendogram{
 
     void RunUntilD(const size_t num_threads);
     std::vector<Cluster> GetAllClusters(const size_t max_threads);
+
+    void PrintVoronoiSummary();
+    
 };
 
 #endif

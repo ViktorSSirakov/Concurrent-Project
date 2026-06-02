@@ -85,22 +85,7 @@ int main(int argc, char* argv[]) {
     auto run_until_d_end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> run_until_d_time = run_until_d_end - run_until_d_start;
 
-    for (size_t i = 0; i < v.cells.size(); i += 1) {
-        size_t active_after = 0;
-        for (const auto& a : voronoi_dendo.cell_dendos[i].actives) {
-            if (a.active) {
-                active_after += 1;
-            }
-        }
-
-        std::cout << "Cell " << i
-                  << " | clusters before HAC: " << v.cells[i].clusters.size()
-                  << " | clusters after HAC: " << active_after
-                  << " | merges: " << voronoi_dendo.cell_dendos[i].history.size()
-                  << std::endl;
-
-        //local_dendogram.PrintHistory("Cell " + std::to_string(i));
-    }
+    voronoi_dendo.PrintVoronoiSummary();
 
     auto collect_start = std::chrono::high_resolution_clock::now();
     std::vector<Cluster> all_clusters = voronoi_dendo.GetAllClusters(num_threads);

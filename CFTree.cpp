@@ -142,5 +142,5 @@ void CFTree::PrintSummary() const {
     for(const auto& node: this->Nodes){
         std::cout << "This one has " << node.n << "points!" << std::endl; 
     }
-    std::cout << "\n\n\n" << std::endl;
+    std::cout << std::endl;
 }
