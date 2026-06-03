@@ -133,7 +133,7 @@ void StandartizationHelp(Data& data, const std::vector<double>& intervals, size_
     for(size_t j = begin; j < end; j += 1){
         auto& p = data.points[j];
         for(size_t i = 0; i < dim; i += 1){
-            p.data[i] /= intervals[i];
+            p.data[i] = (p.data[i] - data.min_val[i])/ intervals[i];
         }
     }
 }
@@ -149,8 +149,7 @@ void Data::Standartize(const size_t max_threads){
     for(size_t i = 0; i < dim; i += 1){
         intervals[i] = this->max_val[i] - this->min_val[i];
         if(intervals[i] <= 0){
-            std::cerr << "Something wierd is happening with the data!" << std::endl;
-            return; 
+            intervals[i] = 1;
         }
     }
 

@@ -32,12 +32,13 @@ struct CFNode{
 
 
 struct CFTree{
-    double maxN = 100;
+    double maxN;
     double maxR;
     std::vector<CFNode> Nodes;
 
-    CFTree(double maxR){
+    CFTree(double maxR, const size_t N){
         this->maxR = maxR;
+        this->maxN = N;
     }
 
     std::vector<std::vector<double>> GetAllCentroid();

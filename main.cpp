@@ -12,7 +12,10 @@
 
 struct IterationTiming {
     double maxR;
-    size_t clusters;
+    size_t clusters_before;
+    size_t clusters_after;
+    size_t clusters_disappeared;
+
     double cftree_time = 0.0;
     double voronoi_ctor_time = 0.0;
     double voronoi_time = 0.0;
@@ -21,8 +24,13 @@ struct IterationTiming {
     double collect_time = 0.0;
 
     double OverallTime(){
-        const double time_cost = this->cftree_time + this->voronoi_ctor_time + this->voronoi_time 
-        + this->vdendo_ctor_time + this->run_until_d_time + this->collect_time;
+        const double time_cost =
+            this->cftree_time +
+            this->voronoi_ctor_time +
+            this->voronoi_time +
+            this->vdendo_ctor_time +
+            this->run_until_d_time +
+            this->collect_time;
 
         return time_cost;
     }
@@ -61,20 +69,23 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Threads: " << num_threads << std::endl;
     std::cout << "Target max cells: fewer than " << max_cells << std::endl;
+    std::cout << "Initial singleton clusters: " << clusters.size() << std::endl;
 
     std::vector<Cluster> all_clusters;
     std::vector<IterationTiming> iteration_timings;
+    double d = maxR;
 
     do {
-        std::cout << "\nRunning with maxR = " << maxR << std::endl;
+        std::cout << "\nRunning with delta = " << d << std::endl;
+
+        const size_t clusters_before = clusters.size();
 
         auto cftree_start = std::chrono::high_resolution_clock::now();
-        CFTree tree(maxR);
+        CFTree tree(maxR, INFINITY);
         tree.IncludeClusters(clusters);
         auto cftree_end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> cftree_time = cftree_end - cftree_start;
 
-        double d = maxR;
 
         auto voronoi_ctor_start = std::chrono::high_resolution_clock::now();
         Voronoi v(d, &tree);
@@ -101,9 +112,15 @@ int main(int argc, char* argv[]) {
         auto collect_end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> collect_time = collect_end - collect_start;
 
+        const size_t clusters_after = all_clusters.size();
+        const size_t clusters_disappeared =
+            clusters_before > clusters_after ? clusters_before - clusters_after : 0;
+
         iteration_timings.push_back({
             maxR,
-            all_clusters.size(),
+            clusters_before,
+            clusters_after,
+            clusters_disappeared,
             cftree_time.count(),
             voronoi_ctor_time.count(),
             voronoi_time.count(),
@@ -112,8 +129,9 @@ int main(int argc, char* argv[]) {
             collect_time.count()
         });
 
-
-        std::cout << "Total local clusters collected: " << all_clusters.size() << std::endl;
+        std::cout << "Clusters before current step: " << clusters_before << std::endl;
+        std::cout << "Total local clusters collected: " << clusters_after << std::endl;
+        std::cout << "Clusters disappeared in current step: " << clusters_disappeared << std::endl;
 
         maxR *= 1.1;
 
@@ -140,37 +158,43 @@ int main(int argc, char* argv[]) {
 
     std::cout << "\n=== Per-run timing summary ===" << std::endl;
 
-
-
     for (size_t i = 0; i < iteration_timings.size(); i += 1) {
         const auto& t = iteration_timings[i];
 
         std::cout << "\nRun " << i + 1 << " | maxR = " << t.maxR
-                  << " | clusters = " << t.clusters << std::endl;
+                  << " | clusters before = " << t.clusters_before
+                  << " | clusters after = " << t.clusters_after
+                  << " | disappeared = " << t.clusters_disappeared
+                  << std::endl;
+
         std::cout << "CFTree build:               " << t.cftree_time << " s" << std::endl;
         std::cout << "Voronoi ctor:               " << t.voronoi_ctor_time << " s" << std::endl;
         std::cout << "Voronoi split:              " << t.voronoi_time << " s" << std::endl;
         std::cout << "VoronoiDendogram ctor:      " << t.vdendo_ctor_time << " s" << std::endl;
         std::cout << "RunUntilD:                  " << t.run_until_d_time << " s" << std::endl;
         std::cout << "GetAllClusters:             " << t.collect_time << " s" << std::endl;
-        
     }
 
-    std::cout << "\n=== GLobal timing summary ===" << std::endl;
+    std::cout << "\n=== Global timing summary ===" << std::endl;
     std::cout << "Data loading:               " << dataloading_time.count() << " s" << std::endl;
     std::cout << "PointsToClusters:           " << pts_to_clusters_time.count() << " s" << std::endl;
     std::cout << "Global dendogram ctor:      " << global_time.count() << " s" << std::endl;
     std::cout << "Final clusters:             " << all_clusters.size() << std::endl;
 
+    std::cout << "\n\n================== Overall Timing Summary ===================" << std::endl;
 
-    std::cout << "\n\n================== Overall Timing Summary ==================="<<std::endl;
     for(size_t i = 0; i < iteration_timings.size(); i += 1){
-        std::cout << "For rerun number " << (i + 1) 
-        << ", it took " << iteration_timings[i].OverallTime() << "secs."<<std::endl;
+        std::cout << "For rerun number " << (i + 1)
+                  << ", it took " << iteration_timings[i].OverallTime()
+                  << " secs and removed "
+                  << iteration_timings[i].clusters_disappeared
+                  << " clusters."
+                  << std::endl;
     }
 
-    std::cout << "For the global case, it took " 
-    << (dataloading_time.count() + pts_to_clusters_time.count() + global_time.count()) << " secs." << std::endl;
+    std::cout << "For the global case, it took "
+              << (dataloading_time.count() + pts_to_clusters_time.count() + global_time.count())
+              << " secs." << std::endl;
 
     return 0;
 }

@@ -229,7 +229,7 @@ void CollectClustersWorker(VoronoiDendogram* self, std::atomic<size_t>* next,
 
     const size_t n_cells = self->cell_dendos.size();
     for (;;) {
-        size_t i = next->fetch_add(1, std::memory_order_relaxed);
+        size_t i = next->fetch_add(1);
         if (i >= n_cells) return;
 
         const Dendogram::PQ& dendo = self->cell_dendos[i];
