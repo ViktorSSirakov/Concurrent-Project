@@ -2,7 +2,7 @@ CXX = g++
 CXXFLAGS = -Wall -Wextra -std=c++17
 
 TARGET = main
-SOURCES = main.cpp datapoints.cpp CFTree.cpp voronoi.cpp HAC.cpp
+SOURCES = main.cpp datapoints.cpp CFTree.cpp voronoi.cpp HAC.cpp HAC_optimize.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
 prepare: $(TARGET)

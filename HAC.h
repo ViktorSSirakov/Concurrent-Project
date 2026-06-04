@@ -20,23 +20,42 @@ struct Voronoi;
 //We keep the initial clusters given, but we can construct every step. This will be updated to be history dependent as 
 //keeping all pointers for each active cluster is wasteful
 
-struct Dendogram {
-    struct ActiveClusters{
-        std::vector<size_t> initial_ids;
-        std::vector<double> centroid;
-        size_t size;
-        const size_t id;
-        bool active;
+//Keeps track of the active clusters for the dendograms. These are used there for speedup
+struct ActiveClusters{
+    std::vector<size_t> initial_ids;
+    std::vector<double> centroid;
+    size_t size;
+    const size_t id;
+    bool active;
 
-        ActiveClusters(const std::vector<size_t>& initial_ids, const std::vector<double>& centroid, size_t size, size_t id):
-        id(id), initial_ids(initial_ids),
-        centroid(centroid), size(size), active(true){}
+    ActiveClusters(const std::vector<size_t>& initial_ids, const std::vector<double>& centroid, size_t size, size_t id):
+    id(id), initial_ids(initial_ids),
+    centroid(centroid), size(size), active(true){}
 
-        //For initial once
-        ActiveClusters(size_t initial, const std::vector<double>& centroid, size_t size, size_t id): 
-        centroid(centroid), size(size), id(id), initial_ids({initial}), active(true){}        
+    //For initial once
+    ActiveClusters(size_t initial, const std::vector<double>& centroid, size_t size, size_t id): 
+    centroid(centroid), size(size), id(id), initial_ids({initial}), active(true){}        
+};
+
+
+struct ActiveClustersPQ : ActiveClusters {
+
+    struct PQEntry {
+        double dist;
+        size_t other;
+        bool operator>(const PQEntry& o) const { 
+            return dist > o.dist; 
+        }
     };
-    
+
+    using MinPQ = std::priority_queue<PQEntry, std::vector<PQEntry>, std::greater<PQEntry>>;
+
+    MinPQ pq;
+    using ActiveClusters::ActiveClusters;
+};
+
+
+struct Dendogram {
     struct Step {
         size_t left_id;
         size_t right_id;
@@ -69,7 +88,7 @@ struct Dendogram {
 
     virtual std::pair<size_t, size_t> FindClosest(const size_t max_threads){ return {0, 0};}
 
-    virtual bool MergeClosest(const size_t max_threads){ return false;}
+    virtual bool MergeClosest(size_t a, size_t b, const size_t max_threads){ return false;}
 
     //Possible closest neighbor algos
     struct PQ;
@@ -80,21 +99,7 @@ struct Dendogram {
 
 struct Dendogram::PQ : Dendogram {
 
-    struct ActiveClustersPQ : ActiveClusters {
-
-        struct PQEntry {
-            double dist;
-            size_t other;
-            bool operator>(const PQEntry& o) const { 
-                return dist > o.dist; 
-            }
-        };
-
-        using MinPQ = std::priority_queue<PQEntry, std::vector<PQEntry>, std::greater<PQEntry>>;
-
-        MinPQ pq;
-        using ActiveClusters::ActiveClusters;
-    };
+    
 
     std::vector<ActiveClustersPQ> actives;
 
@@ -122,32 +127,9 @@ struct Dendogram::PQ : Dendogram {
     }
 
     std::pair<size_t, size_t> FindClosest(const size_t max_threads);
-    bool MergeClosest(const size_t max_threads);
+    bool MergeClosest(size_t a, size_t b, const size_t max_threads);
 
 };
 
-
-
-struct VoronoiDendogram{ 
-    
-    const Voronoi& voro;
-    std::vector<Dendogram::PQ> cell_dendos;
-
-    VoronoiDendogram(const Voronoi& voro): 
-    voro(voro){
-        this->cell_dendos.reserve(voro.cells.size());
-
-        for (size_t i = 0; i < voro.cells.size(); i += 1) {
-            this->cell_dendos.emplace_back(voro.cells[i].clusters);
-        }
-    }
-
-
-    void RunUntilD(const size_t num_threads);
-    std::vector<Cluster> GetAllClusters(const size_t max_threads);
-
-    void PrintVoronoiSummary();
-    
-};
 
 #endif

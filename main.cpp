@@ -2,6 +2,7 @@
 #include "CFTree.h"
 #include "voronoi.h"
 #include "HAC.h"
+#include "HAC_optimize.h"
 
 #include <algorithm>
 #include <chrono>
@@ -45,10 +46,10 @@ int main(int argc, char* argv[]) {
 
     std::string filename = argv[1];
 
-    size_t num_threads = std::max<size_t>(1, std::stoul(argv[2]));
+    size_t max_threads = std::max<size_t>(1, std::stoul(argv[2]));
     size_t max_cells = std::max<size_t>(2, std::stoul(argv[3]));
 
-    double maxR = 0.1;
+    double maxR = 0.01;
 
     auto dataloading_start = std::chrono::high_resolution_clock::now();
     Data data(filename);
@@ -60,14 +61,14 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    data.PrintSummary();
+    //data.PrintSummary();
 
     auto pts_to_clusters_start = std::chrono::high_resolution_clock::now();
     std::vector<Cluster> clusters = PointsToClusters(data);
     auto pts_to_clusters_end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> pts_to_clusters_time = pts_to_clusters_end - pts_to_clusters_start;
 
-    std::cout << "Threads: " << num_threads << std::endl;
+    std::cout << "Threads: " << max_threads << std::endl;
     std::cout << "Target max cells: fewer than " << max_cells << std::endl;
     std::cout << "Initial singleton clusters: " << clusters.size() << std::endl;
 
@@ -75,6 +76,7 @@ int main(int argc, char* argv[]) {
     std::vector<IterationTiming> iteration_timings;
     double d = maxR;
 
+    /*
     do {
         std::cout << "\nRunning with delta = " << d << std::endl;
 
@@ -91,24 +93,28 @@ int main(int argc, char* argv[]) {
         Voronoi v(d, &tree);
         auto voronoi_ctor_end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> voronoi_ctor_time = voronoi_ctor_end - voronoi_ctor_start;
+        std::cout << "Number of Voronoi cells: " << tree.Nodes.size() << std::endl;
+
 
         auto voronoi_start = std::chrono::high_resolution_clock::now();
-        v.SplitClustersThreads(clusters, num_threads);
+        v.SplitClustersThreads(clusters, 1);
         auto voronoi_end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> voronoi_time = voronoi_end - voronoi_start;
 
         auto vdendo_ctor_start = std::chrono::high_resolution_clock::now();
-        VoronoiDendogram voronoi_dendo(v);
+        VoronoiDendogramLocal voronoi_dendo(v, max_threads);
         auto vdendo_ctor_end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> vdendo_ctor_time = vdendo_ctor_end - vdendo_ctor_start;
+        std::cout << "the split happened!" << std::endl;
+
 
         auto run_until_d_start = std::chrono::high_resolution_clock::now();
-        voronoi_dendo.RunUntilD(num_threads);
+        voronoi_dendo.RunUntilD();
         auto run_until_d_end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> run_until_d_time = run_until_d_end - run_until_d_start;
 
         auto collect_start = std::chrono::high_resolution_clock::now();
-        all_clusters = voronoi_dendo.GetAllClusters(num_threads);
+        all_clusters = voronoi_dendo.GetAllClusters();
         auto collect_end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> collect_time = collect_end - collect_start;
 
@@ -136,11 +142,6 @@ int main(int argc, char* argv[]) {
         maxR *= 1.1;
 
     } while (all_clusters.size() >= max_cells);
-
-    if (all_clusters.empty()) {
-        std::cerr << "No clusters collected after Voronoi phase." << std::endl;
-        return 1;
-    }
 
     std::vector<const Cluster*> all_cluster_ptrs;
 
@@ -170,7 +171,7 @@ int main(int argc, char* argv[]) {
         std::cout << "CFTree build:               " << t.cftree_time << " s" << std::endl;
         std::cout << "Voronoi ctor:               " << t.voronoi_ctor_time << " s" << std::endl;
         std::cout << "Voronoi split:              " << t.voronoi_time << " s" << std::endl;
-        std::cout << "VoronoiDendogram ctor:      " << t.vdendo_ctor_time << " s" << std::endl;
+        std::cout << "VoronoiDendogramLocal ctor:      " << t.vdendo_ctor_time << " s" << std::endl;
         std::cout << "RunUntilD:                  " << t.run_until_d_time << " s" << std::endl;
         std::cout << "GetAllClusters:             " << t.collect_time << " s" << std::endl;
     }
@@ -196,5 +197,51 @@ int main(int argc, char* argv[]) {
               << (dataloading_time.count() + pts_to_clusters_time.count() + global_time.count())
               << " secs." << std::endl;
 
+              */
+
+
+
+    std::cout << "\n\n================== Baseline HAC ==================" << std::endl;
+
+    auto hac_pts_to_clusters_start = std::chrono::high_resolution_clock::now();
+    std::vector<Cluster> hac_clusters = PointsToClusters(data);
+    auto hac_pts_to_clusters_end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> hac_pts_to_clusters_time =
+        hac_pts_to_clusters_end - hac_pts_to_clusters_start;
+
+    std::vector<const Cluster*> hac_cluster_ptrs;
+    hac_cluster_ptrs.reserve(hac_clusters.size());
+
+    for (size_t i = 0; i < hac_clusters.size(); i += 1) {
+        hac_cluster_ptrs.push_back(&hac_clusters[i]);
+    }
+
+    auto hac_start = std::chrono::high_resolution_clock::now();
+    Dendogram::PQ baseline_hac(hac_cluster_ptrs);
+    auto hac_end = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> hac_time = hac_end - hac_start;
+
+    std::cout << "\n=== Baseline HAC Timing Summary ===" << std::endl;
+    std::cout << "Data loading:               "
+            << dataloading_time.count()
+            << " s" << std::endl;
+
+    std::cout << "PointsToClusters:           "
+            << hac_pts_to_clusters_time.count()
+            << " s" << std::endl;
+
+    std::cout << "Full HAC:                   "
+            << hac_time.count()
+            << " s" << std::endl;
+
+    std::cout << "Total baseline runtime:     "
+            << (dataloading_time.count()
+                + hac_pts_to_clusters_time.count()
+                + hac_time.count())
+            << " s" << std::endl;
+
+    baseline_hac.PrintSummary("Baseline HAC");
+    
     return 0;
 }
