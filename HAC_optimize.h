@@ -48,8 +48,10 @@ struct VoronoiDendogramPaper{
     std::vector<MergeStep> history;
     const Voronoi& voro;
     std::vector<Dendogram::PQ> cell_dendos;
-    
-    VoronoiDendogramPaper(const Voronoi& voro): 
+    const size_t max_threads;
+
+    VoronoiDendogramPaper(const Voronoi& voro, const size_t max_threads):
+    max_threads(max_threads), 
     voro(voro){
         this->cell_dendos.reserve(voro.cells.size());
 
@@ -57,6 +59,7 @@ struct VoronoiDendogramPaper{
             this->cell_dendos.emplace_back(voro.cells[i].clusters, 1);
         }
     }
+    
     struct OverallRes{
         double dist; 
         size_t cell; 
@@ -64,12 +67,12 @@ struct VoronoiDendogramPaper{
         size_t elem_b;
     };
    
-    OverallRes FindClosestOverall(const size_t max_threads);
+    OverallRes FindClosestOverall();
 
     void DeactivateEverywhere(const Cluster* p, size_t skip_cell);
     bool Merge(const OverallRes& r);
-    void RunUntilD(size_t max_threads);
-    std::vector<Cluster> GetAllClustersPaper(size_t max_threads);
+    void RunUntilD();
+    std::vector<Cluster> GetAllClusters();
     
 
 };

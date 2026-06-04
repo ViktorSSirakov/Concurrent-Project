@@ -28,15 +28,18 @@ struct Data{
     std::vector<double> min_val;
     std::vector<double> max_val;
     const std::string filename;
+    const size_t max_lines;
 
 
-    Data(const std::string& filename):
+    Data(const std::string& filename, const size_t max_lines):
+    max_lines(max_lines),
     filename(filename){
         this->Initialize(filename);
         this->Standartize(1);
     }
 
-    Data(const std::string& filename, const size_t max_threads):
+    Data(const std::string& filename, const size_t max_threads, const size_t max_lines):
+    max_lines(max_lines),
     filename(filename){
         this->Initialize(filename);
         this->Standartize(max_threads);

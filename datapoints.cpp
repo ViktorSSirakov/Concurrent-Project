@@ -60,7 +60,7 @@ void Data::Initialize(const std::string& filename){
 
     //Get all data
     std::string line;
-    int rowNumber = 1;
+    int row_number = 1;
 
     std::vector<Point> points;
     //For getting coords
@@ -68,6 +68,9 @@ void Data::Initialize(const std::string& filename){
     std::vector<double> mins(n, INFINITY);
     int id = 0;
     while (std::getline(file, line)) {
+        if(row_number > this->max_lines){
+            break;
+        }
         //If a typo line, continue
         if (line.empty()) {
             continue;
@@ -89,6 +92,8 @@ void Data::Initialize(const std::string& filename){
                 label = val;
             } else {
                 numbers.push_back(val);
+
+
             }
             if(maxes[i] < val){
                 maxes[i] = val;
@@ -100,7 +105,8 @@ void Data::Initialize(const std::string& filename){
         Point p(numbers, label, id);
         points.push_back(p);
         id += 1;
-        rowNumber += 1;
+        row_number += 1;
+
         
     }
     this->points = std::move(points);

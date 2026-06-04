@@ -187,11 +187,11 @@ void FindClossest(VoronoiDendogramPaper* self, std::atomic<size_t>* next, Vorono
     *out = {best, bcell, ba, bb};
 }
 
-VoronoiDendogramPaper::OverallRes VoronoiDendogramPaper::FindClosestOverall(const size_t max_threads) {
+VoronoiDendogramPaper::OverallRes VoronoiDendogramPaper::FindClosestOverall() {
     const size_t n = this->cell_dendos.size();
     if (n == 0) return {INFINITY, 0, 0, 0};
 
-    const size_t num_threads = std::max<size_t>(1, std::min(max_threads, n));
+    const size_t num_threads = std::max<size_t>(1, std::min(this->max_threads, n));
     std::atomic<size_t> next(0);
 
     std::vector<OverallRes> reses(num_threads, {INFINITY, 0, 0, 0});
@@ -246,9 +246,9 @@ bool VoronoiDendogramPaper::Merge(const OverallRes& r) {
     return true;
 }
 
-void VoronoiDendogramPaper::RunUntilD(size_t max_threads) {
+void VoronoiDendogramPaper::RunUntilD() {
     while (true) {
-        OverallRes r = FindClosestOverall(max_threads);
+        OverallRes r = FindClosestOverall();
         if (!Merge(r)) break;
     }
 }
@@ -273,7 +273,7 @@ void CollectClustersWorkerPaper(VoronoiDendogramPaper* self, std::atomic<size_t>
     }
 }
 
-std::vector<Cluster> VoronoiDendogramPaper::GetAllClustersPaper(size_t max_threads) {
+std::vector<Cluster> VoronoiDendogramPaper::GetAllClusters() {
     const size_t n_cells = this->cell_dendos.size();
     if (n_cells == 0) {
         std::cerr << "There was problem with loading" << std::endl;
@@ -293,7 +293,7 @@ std::vector<Cluster> VoronoiDendogramPaper::GetAllClustersPaper(size_t max_threa
     std::vector<Cluster> out(total);
     if (total == 0) return out;
 
-    const size_t num_threads = std::max<size_t>(1, std::min(max_threads, n_cells));
+    const size_t num_threads = std::max<size_t>(1, std::min(this->max_threads, n_cells));
     std::atomic<size_t> next(0);
 
     std::vector<std::thread> threads;

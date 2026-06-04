@@ -15,6 +15,46 @@ double distance(const std::vector<double>& A, const std::vector<double>& B);
 struct Cluster;
 
 
+
+void InitializeHelper(Dendogram::PQ* self, size_t begin, size_t end) {
+    const size_t n = self->actives.size();
+    for (size_t i = begin; i < end; i += 1) {
+        std::vector<ActiveClustersPQ::PQEntry> entries;
+        entries.reserve(n - 1);
+        for (size_t j = 0; j < n; j += 1) {
+
+            if (i == j) continue;
+            double d = distance(self->actives[i].centroid, self->actives[j].centroid);
+            entries.push_back({d, j});
+        }
+        
+        self->actives[i].pq = ActiveClustersPQ::MinPQ(std::greater<ActiveClustersPQ::PQEntry>{}, std::move(entries));
+    }
+}
+
+void Dendogram::PQ::InitializePQ() {
+    const size_t n = this->actives.size();
+    if (n == 0){ 
+        std::cerr << "Problem with QR" << std::endl;
+        return; 
+    }
+
+    const size_t num_threads = std::max<size_t>(1, std::min(this->max_threads, n));
+    const size_t chunk = (n + num_threads - 1) / num_threads;
+
+    std::vector<std::thread> threads;
+    threads.reserve(num_threads);
+
+    for (size_t t = 0; t < num_threads; t += 1) {
+        const size_t begin = t * chunk;
+        const size_t end   = std::min(begin + chunk, n);
+        if (begin >= end) break;
+        threads.emplace_back(&InitializeHelper, this, begin, end);
+    }
+
+    for (auto& th : threads) th.join();
+}
+
 Cluster Dendogram::BuildFromNode(const ActiveClusters& act_cl) const {
     Cluster result;
 
@@ -171,12 +211,14 @@ bool Dendogram::PQ::MergeClosest(size_t a, size_t b) {
 
 size_t Dendogram::PQ::MakeDendogram(){
     size_t active_count = this->actives.size();
-
+    size_t max_th = this->max_threads;
+    this->max_threads = 1;
     while (active_count > 1) {
         auto [a, b] = FindClosest();
-        std::cout << distance(this->actives[a].centroid, this->actives[b].centroid)<<std::endl;
         if (!MergeClosest(a, b)) break;
         active_count -= 1;
     }
+
+    this->max_threads = max_th;
     return active_count;
 }

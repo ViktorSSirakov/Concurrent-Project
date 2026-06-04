@@ -44,15 +44,17 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+
+    const size_t max_datapoints = 8000;
     std::string filename = argv[1];
 
     size_t max_threads = std::max<size_t>(1, std::stoul(argv[2]));
     size_t max_cells = std::max<size_t>(2, std::stoul(argv[3]));
 
-    double maxR = 0.01;
+    double maxR = 0.1;
 
     auto dataloading_start = std::chrono::high_resolution_clock::now();
-    Data data(filename);
+    Data data(filename, max_datapoints);
     auto dataloading_end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> dataloading_time = dataloading_end - dataloading_start;
 
@@ -76,75 +78,13 @@ int main(int argc, char* argv[]) {
     std::vector<IterationTiming> iteration_timings;
     double d = maxR;
 
-
-    std::cout << "\n\n================== Baseline HAC ==================" << std::endl;
-
-    auto hac_pts_to_clusters_start = std::chrono::high_resolution_clock::now();
-    std::vector<Cluster> hac_clusters = PointsToClusters(data);
-    auto hac_pts_to_clusters_end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> hac_pts_to_clusters_time =
-        hac_pts_to_clusters_end - hac_pts_to_clusters_start;
-
-
-    std::vector<const Cluster*> hac_cluster_ptrs;
-    hac_cluster_ptrs.reserve(hac_clusters.size());
-
-    for (size_t i = 0; i < hac_clusters.size(); i += 1) {
-        hac_cluster_ptrs.push_back(&hac_clusters[i]);
-    }
-
-
-    auto hac_start = std::chrono::high_resolution_clock::now();
-    Dendogram::PQ baseline_hac(hac_cluster_ptrs, max_threads);
-    auto hac_end = std::chrono::high_resolution_clock::now();
-
-    std::chrono::duration<double> hac_time = hac_end - hac_start;
-
-    auto hac_dendo_start = std::chrono::high_resolution_clock::now();
-    size_t end_amount_cl = baseline_hac.MakeDendogram();
-    auto hac_dendo_end = std::chrono::high_resolution_clock::now();
-
-    std::chrono::duration<double> hac_dendo = hac_dendo_end - hac_dendo_start;
-
-    std::cout << "\n=== Baseline HAC Timing Summary ===" << std::endl;
-    std::cout << "Data loading:               "
-            << dataloading_time.count()
-            << " s" << std::endl;
-
-    std::cout << "PointsToClusters:           "
-            << hac_pts_to_clusters_time.count()
-            << " s" << std::endl;
-
-    std::cout << "Full initialization HAC:                   "
-            << hac_time.count()
-            << " s" << std::endl;
-
-    std::cout << "Full Dendogram HAC:                   "
-            << hac_dendo.count()
-            << " s" << std::endl;
-
-    std::cout << "I got that many clusters in the end " << end_amount_cl << std::endl;
-    std::cout << "Total HAC runtime:     "
-            << (dataloading_time.count()
-                + hac_pts_to_clusters_time.count()
-                + hac_time.count())
-            << " s" << std::endl;
-
-    //baseline_hac.PrintSummary("Baseline HAC");
-    
-    return 0;
-}
-
-
-
-/*
     do {
         std::cout << "\nRunning with delta = " << d << std::endl;
 
         const size_t clusters_before = clusters.size();
 
         auto cftree_start = std::chrono::high_resolution_clock::now();
-        CFTree tree(maxR, INFINITY);
+        CFTree tree(maxR, 2000);
         tree.IncludeClusters(clusters);
         auto cftree_end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> cftree_time = cftree_end - cftree_start;
@@ -158,12 +98,12 @@ int main(int argc, char* argv[]) {
 
 
         auto voronoi_start = std::chrono::high_resolution_clock::now();
-        v.SplitClustersThreads(clusters, 1);
+        v.SplitClustersThreads(clusters, max_threads);
         auto voronoi_end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> voronoi_time = voronoi_end - voronoi_start;
 
         auto vdendo_ctor_start = std::chrono::high_resolution_clock::now();
-        VoronoiDendogramLocal voronoi_dendo(v, max_threads);
+        VoronoiDendogramPaper voronoi_dendo(v, max_threads);
         auto vdendo_ctor_end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> vdendo_ctor_time = vdendo_ctor_end - vdendo_ctor_start;
         std::cout << "the split happened!" << std::endl;
@@ -200,7 +140,9 @@ int main(int argc, char* argv[]) {
         std::cout << "Total local clusters collected: " << clusters_after << std::endl;
         std::cout << "Clusters disappeared in current step: " << clusters_disappeared << std::endl;
 
+        clusters = all_clusters;        
         maxR *= 1.1;
+        d = maxR;
 
     } while (all_clusters.size() >= max_cells);
 
@@ -211,12 +153,18 @@ int main(int argc, char* argv[]) {
     }
 
     auto global_start = std::chrono::high_resolution_clock::now();
-    Dendogram::PQ global_dendogram(all_cluster_ptrs);
+    Dendogram::PQ global_dendogram(all_cluster_ptrs, max_threads);
     auto global_end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> global_time = global_end - global_start;
 
+    auto global_merge_start = std::chrono::high_resolution_clock::now();
+    size_t left = global_dendogram.MakeDendogram();
+    auto global_merge_end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> global_merge_time = global_merge_end - global_merge_start;
+
     std::cout << "\nGlobal dendogram after Voronoi:" << std::endl;
     global_dendogram.PrintSummary("Global");
+
 
     std::cout << "\n=== Per-run timing summary ===" << std::endl;
 
@@ -237,12 +185,6 @@ int main(int argc, char* argv[]) {
         std::cout << "GetAllClusters:             " << t.collect_time << " s" << std::endl;
     }
 
-    std::cout << "\n=== Global timing summary ===" << std::endl;
-    std::cout << "Data loading:               " << dataloading_time.count() << " s" << std::endl;
-    std::cout << "PointsToClusters:           " << pts_to_clusters_time.count() << " s" << std::endl;
-    std::cout << "Global dendogram ctor:      " << global_time.count() << " s" << std::endl;
-    std::cout << "Final clusters:             " << all_clusters.size() << std::endl;
-
     std::cout << "\n\n================== Overall Timing Summary ===================" << std::endl;
 
     for(size_t i = 0; i < iteration_timings.size(); i += 1){
@@ -254,8 +196,25 @@ int main(int argc, char* argv[]) {
                   << std::endl;
     }
 
-    std::cout << "For the global case, it took "
-              << (dataloading_time.count() + pts_to_clusters_time.count() + global_time.count())
+    std::cout << "For the global case, initialization took "
+              <<  global_time.count()
               << " secs." << std::endl;
 
-              */
+    std::cout << "For the global case, making the dendogram took "
+              <<  global_merge_time.count()
+              << " secs." << std::endl;
+
+    std::cout << "Overall time in the general case: " <<  global_time.count() + global_merge_time.count() << std::endl;
+
+    std::cout << "We are left with " << left << " clusters" <<std ::endl;
+    
+
+
+    
+    //baseline_hac.PrintSummary("Baseline HAC");
+    
+    return 0;
+}
+
+
+

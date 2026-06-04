@@ -73,7 +73,7 @@ struct Dendogram {
     const std::vector<const Cluster*> initial_clusters;
     std::vector<Step> history;
     size_t next_id;
-    const size_t max_threads;
+    size_t max_threads;
 
 
     Dendogram(const std::vector<const Cluster*>& initial_clusters, const size_t max_threads):
@@ -115,18 +115,9 @@ struct Dendogram::PQ : Dendogram {
         }
 
         //O(n**2) definition of distances. Distance is O(att)
-        for (size_t i = 0; i < n; i += 1) {
-            for (size_t j = 0; j < n; j += 1) {
-                if (i == j) {
-                    continue;
-                }
-
-                double dist = distance(this->actives[i].centroid, this->actives[j].centroid);
-                this->actives[i].pq.push({dist, j});
-            }
-        }
+        InitializePQ();
     }
-
+    void InitializePQ();
     std::pair<size_t, size_t> FindClosest();
     bool MergeClosest(size_t a, size_t b);
     size_t MakeDendogram();
