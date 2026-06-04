@@ -83,14 +83,13 @@ void FindClosestThreadsHelper(Dendogram::PQ* dend, size_t begin, size_t end, thr
     *out = {{best_a, best_b}, best_dist};
 }
 
-std::pair<size_t, size_t> Dendogram::PQ::FindClosest(const size_t max_threads) {
+std::pair<size_t, size_t> Dendogram::PQ::FindClosest() {
 
 
     size_t n = this->actives.size();
-    const size_t num_threads = std::max<size_t>(1, std::min(max_threads, n));
+    const size_t num_threads = std::max<size_t>(1, std::min(this->max_threads, n));
     const size_t chunk = (n + num_threads - 1) / num_threads;
-    std::vector<thread_res> thr_res;
-    thr_res.reserve(num_threads);
+    std::vector<thread_res> thr_res(num_threads, {{0, 0}, INFINITY});
     std::vector<std::thread> threads;
     threads.reserve(num_threads);
 
@@ -119,7 +118,7 @@ std::pair<size_t, size_t> Dendogram::PQ::FindClosest(const size_t max_threads) {
 }
 
 
-bool Dendogram::PQ::MergeClosest(size_t a, size_t b, const size_t max_threads) {
+bool Dendogram::PQ::MergeClosest(size_t a, size_t b) {
 
 
     if (a == b) {
@@ -170,5 +169,14 @@ bool Dendogram::PQ::MergeClosest(size_t a, size_t b, const size_t max_threads) {
     return true;
 }
 
+size_t Dendogram::PQ::MakeDendogram(){
+    size_t active_count = this->actives.size();
 
-
+    while (active_count > 1) {
+        auto [a, b] = FindClosest();
+        std::cout << distance(this->actives[a].centroid, this->actives[b].centroid)<<std::endl;
+        if (!MergeClosest(a, b)) break;
+        active_count -= 1;
+    }
+    return active_count;
+}

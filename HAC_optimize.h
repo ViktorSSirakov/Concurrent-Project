@@ -22,7 +22,7 @@ struct VoronoiDendogramLocal{
         this->cell_dendos.reserve(voro.cells.size());
 
         for (size_t i = 0; i < voro.cells.size(); i += 1) {
-            this->cell_dendos.emplace_back(voro.cells[i].clusters);
+            this->cell_dendos.emplace_back(voro.cells[i].clusters, 1);
         }
     }
 
@@ -54,7 +54,7 @@ struct VoronoiDendogramPaper{
         this->cell_dendos.reserve(voro.cells.size());
 
         for (size_t i = 0; i < voro.cells.size(); i += 1) {
-            this->cell_dendos.emplace_back(voro.cells[i].clusters);
+            this->cell_dendos.emplace_back(voro.cells[i].clusters, 1);
         }
     }
     struct OverallRes{

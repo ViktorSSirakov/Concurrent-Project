@@ -76,7 +76,68 @@ int main(int argc, char* argv[]) {
     std::vector<IterationTiming> iteration_timings;
     double d = maxR;
 
-    /*
+
+    std::cout << "\n\n================== Baseline HAC ==================" << std::endl;
+
+    auto hac_pts_to_clusters_start = std::chrono::high_resolution_clock::now();
+    std::vector<Cluster> hac_clusters = PointsToClusters(data);
+    auto hac_pts_to_clusters_end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> hac_pts_to_clusters_time =
+        hac_pts_to_clusters_end - hac_pts_to_clusters_start;
+
+
+    std::vector<const Cluster*> hac_cluster_ptrs;
+    hac_cluster_ptrs.reserve(hac_clusters.size());
+
+    for (size_t i = 0; i < hac_clusters.size(); i += 1) {
+        hac_cluster_ptrs.push_back(&hac_clusters[i]);
+    }
+
+
+    auto hac_start = std::chrono::high_resolution_clock::now();
+    Dendogram::PQ baseline_hac(hac_cluster_ptrs, max_threads);
+    auto hac_end = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> hac_time = hac_end - hac_start;
+
+    auto hac_dendo_start = std::chrono::high_resolution_clock::now();
+    size_t end_amount_cl = baseline_hac.MakeDendogram();
+    auto hac_dendo_end = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> hac_dendo = hac_dendo_end - hac_dendo_start;
+
+    std::cout << "\n=== Baseline HAC Timing Summary ===" << std::endl;
+    std::cout << "Data loading:               "
+            << dataloading_time.count()
+            << " s" << std::endl;
+
+    std::cout << "PointsToClusters:           "
+            << hac_pts_to_clusters_time.count()
+            << " s" << std::endl;
+
+    std::cout << "Full initialization HAC:                   "
+            << hac_time.count()
+            << " s" << std::endl;
+
+    std::cout << "Full Dendogram HAC:                   "
+            << hac_dendo.count()
+            << " s" << std::endl;
+
+    std::cout << "I got that many clusters in the end " << end_amount_cl << std::endl;
+    std::cout << "Total HAC runtime:     "
+            << (dataloading_time.count()
+                + hac_pts_to_clusters_time.count()
+                + hac_time.count())
+            << " s" << std::endl;
+
+    //baseline_hac.PrintSummary("Baseline HAC");
+    
+    return 0;
+}
+
+
+
+/*
     do {
         std::cout << "\nRunning with delta = " << d << std::endl;
 
@@ -198,50 +259,3 @@ int main(int argc, char* argv[]) {
               << " secs." << std::endl;
 
               */
-
-
-
-    std::cout << "\n\n================== Baseline HAC ==================" << std::endl;
-
-    auto hac_pts_to_clusters_start = std::chrono::high_resolution_clock::now();
-    std::vector<Cluster> hac_clusters = PointsToClusters(data);
-    auto hac_pts_to_clusters_end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> hac_pts_to_clusters_time =
-        hac_pts_to_clusters_end - hac_pts_to_clusters_start;
-
-    std::vector<const Cluster*> hac_cluster_ptrs;
-    hac_cluster_ptrs.reserve(hac_clusters.size());
-
-    for (size_t i = 0; i < hac_clusters.size(); i += 1) {
-        hac_cluster_ptrs.push_back(&hac_clusters[i]);
-    }
-
-    auto hac_start = std::chrono::high_resolution_clock::now();
-    Dendogram::PQ baseline_hac(hac_cluster_ptrs);
-    auto hac_end = std::chrono::high_resolution_clock::now();
-
-    std::chrono::duration<double> hac_time = hac_end - hac_start;
-
-    std::cout << "\n=== Baseline HAC Timing Summary ===" << std::endl;
-    std::cout << "Data loading:               "
-            << dataloading_time.count()
-            << " s" << std::endl;
-
-    std::cout << "PointsToClusters:           "
-            << hac_pts_to_clusters_time.count()
-            << " s" << std::endl;
-
-    std::cout << "Full HAC:                   "
-            << hac_time.count()
-            << " s" << std::endl;
-
-    std::cout << "Total baseline runtime:     "
-            << (dataloading_time.count()
-                + hac_pts_to_clusters_time.count()
-                + hac_time.count())
-            << " s" << std::endl;
-
-    baseline_hac.PrintSummary("Baseline HAC");
-    
-    return 0;
-}

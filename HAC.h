@@ -73,10 +73,11 @@ struct Dendogram {
     const std::vector<const Cluster*> initial_clusters;
     std::vector<Step> history;
     size_t next_id;
+    const size_t max_threads;
 
 
-    Dendogram(const std::vector<const Cluster*>& initial_clusters):
-    initial_clusters(initial_clusters), next_id(initial_clusters.size()){}
+    Dendogram(const std::vector<const Cluster*>& initial_clusters, const size_t max_threads):
+    initial_clusters(initial_clusters), next_id(initial_clusters.size()), max_threads(max_threads){}
     
 
     Cluster BuildFromNode(const ActiveClusters& act_cl) const;
@@ -86,10 +87,10 @@ struct Dendogram {
     //Placceholder. Calling them on a this structure is meaningless. 
     //Technically simple algos can be implemented to be finding the distance every time, but its much sloweer(at least 20 times)
 
-    virtual std::pair<size_t, size_t> FindClosest(const size_t max_threads){ return {0, 0};}
+    virtual std::pair<size_t, size_t> FindClosest(){ return {0, 0};}
 
-    virtual bool MergeClosest(size_t a, size_t b, const size_t max_threads){ return false;}
-
+    virtual bool MergeClosest(size_t a, size_t b){ return false;}
+    virtual size_t MakeDendogram(){ return 0; }
     //Possible closest neighbor algos
     struct PQ;
 
@@ -103,8 +104,8 @@ struct Dendogram::PQ : Dendogram {
 
     std::vector<ActiveClustersPQ> actives;
 
-    PQ(const std::vector<const Cluster*>& initial_clusters):
-    Dendogram(initial_clusters){
+    PQ(const std::vector<const Cluster*>& initial_clusters, const size_t max_threads):
+    Dendogram(initial_clusters, max_threads){
 
         const size_t n = initial_clusters.size();
         this->actives.reserve(n);
@@ -126,9 +127,9 @@ struct Dendogram::PQ : Dendogram {
         }
     }
 
-    std::pair<size_t, size_t> FindClosest(const size_t max_threads);
-    bool MergeClosest(size_t a, size_t b, const size_t max_threads);
-
+    std::pair<size_t, size_t> FindClosest();
+    bool MergeClosest(size_t a, size_t b);
+    size_t MakeDendogram();
 };
 
 

@@ -22,7 +22,7 @@ void RunCellsUntilDHelp(VoronoiDendogramLocal* self, std::atomic<size_t>* next, 
 
         Dendogram::PQ& dendo = self->cell_dendos[i];
         for (;;) {
-            auto [a, b] = dendo.FindClosest(1);
+            auto [a, b] = dendo.FindClosest();
             if (a == b) {
                 break;
             }
@@ -31,8 +31,8 @@ void RunCellsUntilDHelp(VoronoiDendogramLocal* self, std::atomic<size_t>* next, 
             if (dist > d) {
                 break;
             }
-            auto pair = dendo.FindClosest(1);
-            dendo.MergeClosest(pair.first, pair.second, 1);
+            auto pair = dendo.FindClosest();
+            dendo.MergeClosest(pair.first, pair.second);
         }
     }
 }
@@ -242,7 +242,7 @@ bool VoronoiDendogramPaper::Merge(const OverallRes& r) {
     if (nb.initial_ids.size() == 1) DeactivateEverywhere(home.initial_clusters[nb.initial_ids[0]], r.cell);
 
     history.push_back({r.cell, home.actives[r.elem_a].id, home.actives[r.elem_b].id, r.dist});
-    home.MergeClosest(r.elem_a, r.elem_b, 1);
+    home.MergeClosest(r.elem_a, r.elem_b);
     return true;
 }
 
