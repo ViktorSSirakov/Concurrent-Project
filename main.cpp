@@ -103,7 +103,11 @@ int main(int argc, char* argv[]) {
         std::chrono::duration<double> voronoi_time = voronoi_end - voronoi_start;
 
         auto vdendo_ctor_start = std::chrono::high_resolution_clock::now();
+
+        //change this line!
         VoronoiDendogramPaper voronoi_dendo(v, max_threads);
+
+
         auto vdendo_ctor_end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> vdendo_ctor_time = vdendo_ctor_end - vdendo_ctor_start;
         std::cout << "the split happened!" << std::endl;

@@ -31,8 +31,7 @@ void RunCellsUntilDHelp(VoronoiDendogramLocal* self, std::atomic<size_t>* next, 
             if (dist > d) {
                 break;
             }
-            auto pair = dendo.FindClosest();
-            dendo.MergeClosest(pair.first, pair.second);
+            dendo.MergeClosest(a, b);
         }
     }
 }

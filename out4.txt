@@ -1,0 +1,160 @@
+]633;E;for i in {1..5};f5f34501-731b-4e58-84f5-f4b145afc4d6]633;CThreads: 8
+Target max cells: fewer than 1000
+Initial singleton clusters: 8000
+
+Running with delta = 0.1
+Number of Voronoi cells: 8
+the split happened!
+Clusters before current step: 8000
+Total local clusters collected: 25
+Clusters disappeared in current step: 7975
+
+Global dendogram after Voronoi:
+Global merges: 24
+Global initial clusters: 25
+
+=== Per-run timing summary ===
+
+Run 1 | maxR = 0.1 | clusters before = 8000 | clusters after = 25 | disappeared = 7975
+CFTree build:               0.0227139 s
+Voronoi ctor:               2.0572e-05 s
+Voronoi split:              0.00853578 s
+VoronoiDendogramLocal ctor:      15.8556 s
+RunUntilD:                  19.3504 s
+GetAllClusters:             0.00113788 s
+
+
+================== Overall Timing Summary ===================
+For rerun number 1, it took 35.2384 secs and removed 7975 clusters.
+For the global case, initialization took 0.00143936 secs.
+For the global case, making the dendogram took 0.00275588 secs.
+Overall time in the general case: 0.00419523
+We are left with 1 clusters
+Threads: 8
+Target max cells: fewer than 1000
+Initial singleton clusters: 8000
+
+Running with delta = 0.1
+Number of Voronoi cells: 8
+the split happened!
+Clusters before current step: 8000
+Total local clusters collected: 32
+Clusters disappeared in current step: 7968
+
+Global dendogram after Voronoi:
+Global merges: 31
+Global initial clusters: 32
+
+=== Per-run timing summary ===
+
+Run 1 | maxR = 0.1 | clusters before = 8000 | clusters after = 32 | disappeared = 7968
+CFTree build:               0.0242017 s
+Voronoi ctor:               1.1658e-05 s
+Voronoi split:              0.00916426 s
+VoronoiDendogramLocal ctor:      18.6574 s
+RunUntilD:                  19.5808 s
+GetAllClusters:             0.000884341 s
+
+
+================== Overall Timing Summary ===================
+For rerun number 1, it took 38.2725 secs and removed 7968 clusters.
+For the global case, initialization took 0.00165233 secs.
+For the global case, making the dendogram took 0.00379656 secs.
+Overall time in the general case: 0.00544889
+We are left with 1 clusters
+Threads: 8
+Target max cells: fewer than 1000
+Initial singleton clusters: 8000
+
+Running with delta = 0.1
+Number of Voronoi cells: 8
+the split happened!
+Clusters before current step: 8000
+Total local clusters collected: 28
+Clusters disappeared in current step: 7972
+
+Global dendogram after Voronoi:
+Global merges: 27
+Global initial clusters: 28
+
+=== Per-run timing summary ===
+
+Run 1 | maxR = 0.1 | clusters before = 8000 | clusters after = 28 | disappeared = 7972
+CFTree build:               0.0251438 s
+Voronoi ctor:               1.3648e-05 s
+Voronoi split:              0.00855102 s
+VoronoiDendogramLocal ctor:      18.4853 s
+RunUntilD:                  19.3643 s
+GetAllClusters:             0.000854216 s
+
+
+================== Overall Timing Summary ===================
+For rerun number 1, it took 37.8842 secs and removed 7972 clusters.
+For the global case, initialization took 0.00122299 secs.
+For the global case, making the dendogram took 0.00304417 secs.
+Overall time in the general case: 0.00426716
+We are left with 1 clusters
+Threads: 8
+Target max cells: fewer than 1000
+Initial singleton clusters: 8000
+
+Running with delta = 0.1
+Number of Voronoi cells: 8
+the split happened!
+Clusters before current step: 8000
+Total local clusters collected: 29
+Clusters disappeared in current step: 7971
+
+Global dendogram after Voronoi:
+Global merges: 28
+Global initial clusters: 29
+
+=== Per-run timing summary ===
+
+Run 1 | maxR = 0.1 | clusters before = 8000 | clusters after = 29 | disappeared = 7971
+CFTree build:               0.0234535 s
+Voronoi ctor:               9.904e-06 s
+Voronoi split:              0.00902532 s
+VoronoiDendogramLocal ctor:      18.2758 s
+RunUntilD:                  19.136 s
+GetAllClusters:             0.000960602 s
+
+
+================== Overall Timing Summary ===================
+For rerun number 1, it took 37.4453 secs and removed 7971 clusters.
+For the global case, initialization took 0.00164869 secs.
+For the global case, making the dendogram took 0.00340685 secs.
+Overall time in the general case: 0.00505554
+We are left with 1 clusters
+Threads: 8
+Target max cells: fewer than 1000
+Initial singleton clusters: 8000
+
+Running with delta = 0.1
+Number of Voronoi cells: 8
+the split happened!
+Clusters before current step: 8000
+Total local clusters collected: 27
+Clusters disappeared in current step: 7973
+
+Global dendogram after Voronoi:
+Global merges: 26
+Global initial clusters: 27
+
+=== Per-run timing summary ===
+
+Run 1 | maxR = 0.1 | clusters before = 8000 | clusters after = 27 | disappeared = 7973
+CFTree build:               0.0288051 s
+Voronoi ctor:               1.125e-05 s
+Voronoi split:              0.00839071 s
+VoronoiDendogramLocal ctor:      18.4316 s
+RunUntilD:                  19.279 s
+GetAllClusters:             0.000755749 s
+
+
+================== Overall Timing Summary ===================
+For rerun number 1, it took 37.7486 secs and removed 7973 clusters.
+For the global case, initialization took 0.00205307 secs.
+For the global case, making the dendogram took 0.00259004 secs.
+Overall time in the general case: 0.00464312
+We are left with 1 clusters
