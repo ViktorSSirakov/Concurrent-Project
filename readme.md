@@ -11,7 +11,7 @@ app - the approach to be used. 0 is for normal HAC, 1 and 2 match the approach
 
 Example command to run the experiment on the dataset banknote with 8 threads and the approach described in the pPOP paper - the settings used for debugging.
 
-./main "Clustering-Datasets/01. UCI/banknote.csv" 8 10000 1
+make && ./main "Clustering-Datasets/01. UCI/banknote.csv" 8 10000 1
 
 
 Given Commands to run the entire experiment:
