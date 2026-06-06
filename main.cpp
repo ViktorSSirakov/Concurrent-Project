@@ -104,6 +104,11 @@ int main(int argc, char* argv[]) {
     double d = maxR;
 
     const size_t approach = std::stoul(argv[4]);
+    
+    if(approach >= 3){
+        std::cerr << "This approach is unknown!" << std::endl;
+        return 1;
+    }
 
     if(approach > 0){
         do {
@@ -154,7 +159,7 @@ int main(int argc, char* argv[]) {
             d = maxR;
 
         } while (all_clusters.size() >= max_cells);
-        
+
     }else{
         all_clusters = clusters;
     }
