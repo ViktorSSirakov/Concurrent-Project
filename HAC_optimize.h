@@ -10,6 +10,8 @@
 #include <utility>
 #include <queue>
 
+
+
 struct VoronoiDendogramLocal{ 
     
     const Voronoi& voro;

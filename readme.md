@@ -9,6 +9,11 @@ Path_To_DataSet - The folder Clustering-Dataset is provided with example dataset
 app - the approach to be used. 0 is for normal HAC, 1 and 2 match the approach
 
 
+Example command to run the experiment on the dataset banknote with 8 threads and the approach described in the pPOP paper - the settings used for debugging.
+
+./main "Clustering-Datasets/01. UCI/banknote.csv" 8 10000 1
+
+
 Given Commands to run the entire experiment:
 
 datasets=(
@@ -17,13 +22,13 @@ datasets=(
   "Clustering-Datasets/01. UCI/EEG Eye State.csv"
 )
 
-
+thr_ct=(1 8)
 
 mkdir -p build &&
 for ds in "${datasets[@]}"; do
   name=$(basename "$ds" .csv)        # e.g. "banknote"
-  for t in 1 8; do                   # thread counts
-    for mode in 0 1 2; do            # whatever your mode flag means
+  for t in "${thr_ct[@]}"; do        # thread counts
+    for mode in 0 1 2; do
       for i in {1..5}; do
         ./main "$ds" "$t" 10000 "$mode"
       done > "build/out_${name}_t${t}_m${mode}.txt"
@@ -31,3 +36,8 @@ for ds in "${datasets[@]}"; do
   done
 done
 
+
+
+The command creates a folder build and fills it up with the results. 
+By changing the dataset variable, you can run the same experiment on custom datasets.
+The experiment is done for 1 and 8 threads. You can run it on different amounts by editing the variable thr_ct.

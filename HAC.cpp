@@ -211,14 +211,13 @@ bool Dendogram::PQ::MergeClosest(size_t a, size_t b) {
 
 size_t Dendogram::PQ::MakeDendogram(){
     size_t active_count = this->actives.size();
-    size_t max_th = this->max_threads;
-    this->max_threads = 1;
+    //this->max_threads = 1;
     while (active_count > 1) {
         auto [a, b] = FindClosest();
         if (!MergeClosest(a, b)) break;
         active_count -= 1;
     }
 
-    this->max_threads = max_th;
+    //this->max_threads = max_th;
     return active_count;
 }
