@@ -12,3 +12,4 @@ Given COmmands for the experiments:
 
 #Experiment 1
 ./main Clustering-Datasets/01.\ UCI/banknote.csv 1 10000
+ for i in {1..5}; do ./main Clustering-Datasets/01.\ UCI/banknote.csv 1 10000; done > out.txt

@@ -37,10 +37,35 @@ struct IterationTiming {
     }
 };
 
+template <typename Dendogram>
+std::vector<Cluster> RunLocalPhase(Voronoi& v, size_t max_threads, IterationTiming& timing) {
+    auto ctor_start = std::chrono::high_resolution_clock::now();
+    Dendogram voronoi_dendo(v, max_threads);
+    auto ctor_end = std::chrono::high_resolution_clock::now();
+    timing.vdendo_ctor_time = std::chrono::duration<double>(ctor_end - ctor_start).count();
+
+    std::cout << "the split happened!" << std::endl;
+
+    auto run_start = std::chrono::high_resolution_clock::now();
+    voronoi_dendo.RunUntilD();
+    auto run_end = std::chrono::high_resolution_clock::now();
+    timing.run_until_d_time = std::chrono::duration<double>(run_end - run_start).count();
+
+    auto collect_start = std::chrono::high_resolution_clock::now();
+    std::vector<Cluster> result = voronoi_dendo.GetAllClusters();
+    auto collect_end = std::chrono::high_resolution_clock::now();
+    timing.collect_time = std::chrono::duration<double>(collect_end - collect_start).count();
+
+    return result;
+}
+
 int main(int argc, char* argv[]) {
-    if (argc < 4) {
-        std::cerr << "Usage: " << argv[0] << " <csv-file-path> <num_threads> <max_cells>" << std::endl;
-        std::cerr << "Example path: Clustering-Datasets/01.\\ UCI/banknote.csv 4 100" << std::endl;
+    const size_t num_args = 5;
+
+
+    if (argc < num_args) {
+        std::cerr << "Usage: " << argv[0] << " <csv-file-path> <num_threads> <max_cells> <approach>" << std::endl;
+        std::cerr << "Example path: Clustering-Datasets/01.\\ UCI/banknote.csv 4 100 <1>" << std::endl;
         return 1;
     }
 
@@ -78,77 +103,61 @@ int main(int argc, char* argv[]) {
     std::vector<IterationTiming> iteration_timings;
     double d = maxR;
 
-    do {
-        std::cout << "\nRunning with delta = " << d << std::endl;
+    const size_t approach = std::stoul(argv[4]);
 
-        const size_t clusters_before = clusters.size();
+    if(approach > 0){
+        do {
+            std::cout << "\nRunning with delta = " << d << std::endl;
 
-        auto cftree_start = std::chrono::high_resolution_clock::now();
-        CFTree tree(maxR, 2000);
-        tree.IncludeClusters(clusters);
-        auto cftree_end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> cftree_time = cftree_end - cftree_start;
+            const size_t clusters_before = clusters.size();
 
+            IterationTiming timing;
+            timing.maxR            = maxR;
+            timing.clusters_before = clusters_before;
 
-        auto voronoi_ctor_start = std::chrono::high_resolution_clock::now();
-        Voronoi v(d, &tree);
-        auto voronoi_ctor_end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> voronoi_ctor_time = voronoi_ctor_end - voronoi_ctor_start;
-        std::cout << "Number of Voronoi cells: " << tree.Nodes.size() << std::endl;
+            auto cftree_start = std::chrono::high_resolution_clock::now();
+            CFTree tree(maxR, 2000);
+            tree.IncludeClusters(clusters);
+            auto cftree_end = std::chrono::high_resolution_clock::now();
+            timing.cftree_time = std::chrono::duration<double>(cftree_end - cftree_start).count();
 
+            auto voronoi_ctor_start = std::chrono::high_resolution_clock::now();
+            Voronoi v(d, &tree);
+            auto voronoi_ctor_end = std::chrono::high_resolution_clock::now();
+            timing.voronoi_ctor_time = std::chrono::duration<double>(voronoi_ctor_end - voronoi_ctor_start).count();
+            std::cout << "Number of Voronoi cells: " << tree.Nodes.size() << std::endl;
 
-        auto voronoi_start = std::chrono::high_resolution_clock::now();
-        v.SplitClustersThreads(clusters, max_threads);
-        auto voronoi_end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> voronoi_time = voronoi_end - voronoi_start;
+            auto voronoi_start = std::chrono::high_resolution_clock::now();
+            v.SplitClustersThreads(clusters, max_threads);
+            auto voronoi_end = std::chrono::high_resolution_clock::now();
+            timing.voronoi_time = std::chrono::duration<double>(voronoi_end - voronoi_start).count();
 
-        auto vdendo_ctor_start = std::chrono::high_resolution_clock::now();
+            if (approach == 2)
+                all_clusters = RunLocalPhase<VoronoiDendogramLocal>(v, max_threads, timing);
+            else
+                all_clusters = RunLocalPhase<VoronoiDendogramPaper>(v, max_threads, timing);
 
-        //change this line!
-        VoronoiDendogramPaper voronoi_dendo(v, max_threads);
+            const size_t clusters_after = all_clusters.size();
+            const size_t clusters_disappeared =
+                clusters_before > clusters_after ? clusters_before - clusters_after : 0;
 
+            timing.clusters_after       = clusters_after;
+            timing.clusters_disappeared = clusters_disappeared;
+            iteration_timings.push_back(timing);
 
-        auto vdendo_ctor_end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> vdendo_ctor_time = vdendo_ctor_end - vdendo_ctor_start;
-        std::cout << "the split happened!" << std::endl;
+            std::cout << "Clusters before current step: " << clusters_before << std::endl;
+            std::cout << "Total local clusters collected: " << clusters_after << std::endl;
+            std::cout << "Clusters disappeared in current step: " << clusters_disappeared << std::endl;
 
+            clusters = all_clusters;
+            maxR *= 1.1;
+            d = maxR;
 
-        auto run_until_d_start = std::chrono::high_resolution_clock::now();
-        voronoi_dendo.RunUntilD();
-        auto run_until_d_end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> run_until_d_time = run_until_d_end - run_until_d_start;
-
-        auto collect_start = std::chrono::high_resolution_clock::now();
-        all_clusters = voronoi_dendo.GetAllClusters();
-        auto collect_end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> collect_time = collect_end - collect_start;
-
-        const size_t clusters_after = all_clusters.size();
-        const size_t clusters_disappeared =
-            clusters_before > clusters_after ? clusters_before - clusters_after : 0;
-
-        iteration_timings.push_back({
-            maxR,
-            clusters_before,
-            clusters_after,
-            clusters_disappeared,
-            cftree_time.count(),
-            voronoi_ctor_time.count(),
-            voronoi_time.count(),
-            vdendo_ctor_time.count(),
-            run_until_d_time.count(),
-            collect_time.count()
-        });
-
-        std::cout << "Clusters before current step: " << clusters_before << std::endl;
-        std::cout << "Total local clusters collected: " << clusters_after << std::endl;
-        std::cout << "Clusters disappeared in current step: " << clusters_disappeared << std::endl;
-
-        clusters = all_clusters;        
-        maxR *= 1.1;
-        d = maxR;
-
-    } while (all_clusters.size() >= max_cells);
+        } while (all_clusters.size() >= max_cells);
+        
+    }else{
+        all_clusters = clusters;
+    }
 
     std::vector<const Cluster*> all_cluster_ptrs;
 
