@@ -6,3 +6,4 @@ display_data.cpp
 main
 *.exe
 *.txt 
+build

@@ -95,6 +95,7 @@ int main(int argc, char* argv[]) {
     auto pts_to_clusters_end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> pts_to_clusters_time = pts_to_clusters_end - pts_to_clusters_start;
 
+    std::cout << "\nThe current dataset is " << data.filename << std::endl;
     std::cout << "Threads: " << max_threads << std::endl;
     std::cout << "Target max cells: fewer than " << max_cells << std::endl;
     std::cout << "Initial singleton clusters: " << clusters.size() << std::endl;
@@ -225,6 +226,8 @@ int main(int argc, char* argv[]) {
     std::cout << "Overall time in the general case: " <<  global_time.count() + global_merge_time.count() << std::endl;
 
     std::cout << "We are left with " << left << " clusters" <<std ::endl;
+
+    std::cout << "\n Finisherd execution! \n\n\n" << std::endl;
     
 
 
