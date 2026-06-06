@@ -5,3 +5,4 @@ display_data.cpp
 *:Zone.Id*
 main
 *.exe
+*.txt 
