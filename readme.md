@@ -37,7 +37,15 @@ for ds in "${datasets[@]}"; do
 done
 
 
-
 The command creates a folder build and fills it up with the results. 
 By changing the dataset variable, you can run the same experiment on custom datasets.
 The experiment is done for 1 and 8 threads. You can run it on different amounts by editing the variable thr_ct.
+
+
+
+To see the memory results, go to the main.cpp file and set maxR = 0.01 and max_datapoints = 13000. Then run 
+
+./main "Clustering-Datasets/01. UCI/EEG Eye State.csv" 8 10000 1 or
+./main "Clustering-Datasets/01. UCI/EEG Eye State.csv" 8 10000 2
+
+
