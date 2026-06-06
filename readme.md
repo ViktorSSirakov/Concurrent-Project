@@ -43,9 +43,3 @@ The experiment is done for 1 and 8 threads. You can run it on different amounts 
 
 
 
-To see the memory results, go to the main.cpp file and set maxR = 0.01 and max_datapoints = 13000. Then run 
-
-./main "Clustering-Datasets/01. UCI/EEG Eye State.csv" 8 10000 1 or
-./main "Clustering-Datasets/01. UCI/EEG Eye State.csv" 8 10000 2
-
-
