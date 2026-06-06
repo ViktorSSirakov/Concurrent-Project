@@ -12,6 +12,43 @@
 #include <atomic>
 
 
+//This is to try and fix the Initialization issues
+static void BuildCellDendosWorker(std::vector<Dendogram::PQ>& dendos, std::atomic<size_t>* next) {
+    const size_t n = dendos.size();
+    while(true){
+        const size_t i = next->fetch_add(1);
+        if (i >= n) return;
+        //One cluster is used for the definition of the voro cells. This is coz the given thread are already in use. Initialization is called from 
+        //the thread to make sure its not sequential. 
+        dendos[i].InitializePQ();
+    }
+}
+
+std::vector<Dendogram::PQ> BuildCellDendosParallel(const Voronoi& voro, size_t max_threads) {
+    const size_t n = voro.cells.size();
+    std::vector<Dendogram::PQ> dendos;
+    dendos.reserve(n);
+    for(size_t i = 0; i < n; i += 1) dendos.emplace_back(voro.cells[i].clusters, 1, false); 
+
+    const size_t num_threads = std::max<size_t>(1, std::min(max_threads, n));
+    std::atomic<size_t> next(0);
+    std::vector<std::thread> threads;
+    threads.reserve(num_threads);
+
+
+    for (size_t t = 0; t < num_threads; t += 1)
+        threads.emplace_back(&BuildCellDendosWorker, std::ref(dendos), &next);
+
+    for (auto& th : threads) th.join();
+
+    return dendos;
+}
+
+
+
+
+
+
 //Voronoi Dendogram stuff now. 
 void RunCellsUntilDHelp(VoronoiDendogramLocal* self, std::atomic<size_t>* next, double d) {
 

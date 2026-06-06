@@ -10,7 +10,9 @@
 #include <utility>
 #include <queue>
 
-
+//Attempt to fix the initialization. The function should work no matter the method used. It devides all vals into the correct place/ cell
+//It outputs the dendos for the cells.
+std::vector<Dendogram::PQ> BuildCellDendosParallel(const Voronoi& voro, size_t max_threads);
 
 struct VoronoiDendogramLocal{ 
     
@@ -21,11 +23,8 @@ struct VoronoiDendogramLocal{
     VoronoiDendogramLocal(const Voronoi& voro, const size_t max_threads):
     max_threads(max_threads), 
     voro(voro){
-        this->cell_dendos.reserve(voro.cells.size());
-
-        for (size_t i = 0; i < voro.cells.size(); i += 1) {
-            this->cell_dendos.emplace_back(voro.cells[i].clusters, 1);
-        }
+        //fixing the initialization issue
+        this->cell_dendos = BuildCellDendosParallel(voro, max_threads);
     }
 
 
@@ -55,11 +54,8 @@ struct VoronoiDendogramPaper{
     VoronoiDendogramPaper(const Voronoi& voro, const size_t max_threads):
     max_threads(max_threads), 
     voro(voro){
-        this->cell_dendos.reserve(voro.cells.size());
-
-        for (size_t i = 0; i < voro.cells.size(); i += 1) {
-            this->cell_dendos.emplace_back(voro.cells[i].clusters, 1);
-        }
+        //Fixing the initialization issue
+        this->cell_dendos = BuildCellDendosParallel(voro, max_threads);
     }
     
     struct OverallRes{

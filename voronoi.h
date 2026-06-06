@@ -41,7 +41,6 @@ struct Voronoi{
 
     Voronoi(double d, CFTree* cft) {
         this->d = d;
-        this->cells.reserve(cft->Nodes.size());
 
         for (size_t i = 0; i < cft->Nodes.size(); i += 1) {
             this->cells.emplace_back(cft->Nodes[i].Centroid());

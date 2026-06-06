@@ -104,7 +104,9 @@ struct Dendogram::PQ : Dendogram {
 
     std::vector<ActiveClustersPQ> actives;
 
-    PQ(const std::vector<const Cluster*>& initial_clusters, const size_t max_threads):
+    //used for empty initializations
+
+    PQ(const std::vector<const Cluster*>& initial_clusters, const size_t max_threads, bool with_intilization = true):
     Dendogram(initial_clusters, max_threads){
 
         const size_t n = initial_clusters.size();
@@ -115,7 +117,7 @@ struct Dendogram::PQ : Dendogram {
         }
 
         //O(n**2) definition of distances. Distance is O(att)
-        InitializePQ();
+        if(with_intilization) InitializePQ();
     }
     void InitializePQ();
     std::pair<size_t, size_t> FindClosest();

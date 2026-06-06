@@ -15,5 +15,7 @@ $(TARGET): $(OBJECTS)
 
 clean:
 	rm -f $(OBJECTS) $(TARGET)
+	
 
 clear: clean
+	clear
