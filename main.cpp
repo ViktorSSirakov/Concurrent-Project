@@ -11,6 +11,8 @@
 #include <thread>
 #include <vector>
 
+
+
 struct IterationTiming {
     double maxR;
     size_t clusters_before;
